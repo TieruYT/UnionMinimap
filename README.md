@@ -14,6 +14,10 @@
 
 **(EN)** This mod was created with the assistance of AI tools (Gemini 3 Pro and Claude 4.5 Opus). The code may contain bugs or non-optimal solutions. All bug reports and improvement suggestions are welcome in the [Issues](https://github.com/TieruYT/UnionMinimap/issues) section.
 
+## 📸 Screenshot
+
+![Minimap Settings](screenshot.png)
+
 ## 🌟 Funkcje / Features
 
 ### Minimapa / Minimap
