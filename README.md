@@ -30,7 +30,7 @@
 |-------|----------------|--------------|
 | 🟡 Żółty | Gracz (strzałka) | Player (arrow) |
 | 🔴 Czerwony | Wrogowie (zawsze widoczni) | Enemies (always visible) |
-| 🟠 Pomarańczowy | NPC z questem | Quest NPCs |
+| 🟠 Pomarańczowy | Ważny NPC | Important NPC |
 | ⚪ Biały | Neutralni NPC | Neutral NPCs |
 | 🔵 Niebieski | Przedmioty | Items |
 | 🟢 Zielony | Rośliny i zioła | Plants and herbs |
