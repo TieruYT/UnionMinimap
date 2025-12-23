@@ -1,12 +1,12 @@
 # Gothic 2 Union Plugin: Tieru Minimap
 
-![Gothic 2](https://img.shields.io/badge/Game-Gothic%202%20NoTR-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-2.0-orange)
+![Gothic 2](https://img.shields.io/badge/Game-Gothic%202%20NoTR-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.0-orange)
 
 ## 📖 Opis / Description
 
-**(PL)** Zaawansowany plugin do gry Gothic 2 Noc Kruka (Union), dodający funkcjonalną minimapę z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci oraz zoom klawiszami.
+**(PL)** Zaawansowany plugin do gry Gothic 2 Noc Kruka (Union), dodający funkcjonalną minimapę z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci, zoom klawiszami oraz **nawigację do wybranego NPC**.
 
-**(EN)** An advanced Gothic 2 Night of the Raven (Union) plugin that adds a functional minimap with many configuration options. Displays positions of NPCs, enemies, chests, items, and plants. Supports map rotation according to character direction and keyboard zoom.
+**(EN)** An advanced Gothic 2 Night of the Raven (Union) plugin that adds a functional minimap with many configuration options. Displays positions of NPCs, enemies, chests, items, and plants. Supports map rotation according to character direction, keyboard zoom, and **navigation to selected NPC**.
 
 ### ⚠️ Uwaga o rozwoju / Development Notice
 
@@ -14,9 +14,11 @@
 
 **(EN)** This mod was created with the assistance of AI tools (Gemini 3 Pro and Claude 4.5 Opus). The code may contain bugs or non-optimal solutions. All bug reports and improvement suggestions are welcome in the [Issues](https://github.com/TieruYT/UnionMinimap/issues) section.
 
-## 📸 Screenshot
+## 📸 Screenshots
 
-![Minimap Settings](screenshot.png)
+| Ustawienia Minimapy | Nawigacja do NPC | Linia nawigacji |
+|:---:|:---:|:---:|
+| ![Minimap Settings](screenshot.png) | ![NPC Navigation Menu](screenshot2.png) | ![Navigation Line](screenshot3.png) |
 
 ## 🌟 Funkcje / Features
 
@@ -24,6 +26,12 @@
 *   **Rotacja mapy** - Mapa obraca się zgodnie z kierunkiem postaci (domyślnie włączone)
 *   **Zoom klawiszami** - Przybliżaj (`.` lub `'`) i oddalaj (`,` lub `;`) mapę w czasie gry
 *   **Strzałka gracza** - Wyraźny wskaźnik pozycji i kierunku gracza (tekstura O.TGA)
+
+### Nawigacja do NPC / NPC Navigation (v3.0)
+*   **Menu wyboru NPC** - Lista wszystkich NPC w grze z wyszukiwaniem
+*   **Linia nawigacji** - Złota linia prowadząca od gracza do wybranego NPC
+*   **Automatyczne dotarcie** - Linia znika gdy dotrzesz do celu (< 3m)
+*   **Wyszukiwanie** - Filtrowanie NPC po nazwie w czasie rzeczywistym
 
 ### Wskaźniki / Markers
 | Kolor | Znaczenie (PL) | Meaning (EN) |
@@ -37,6 +45,7 @@
 | 🟢 Zielony (skrzynia) | Otwarta skrzynia | Open chest |
 | 🟡 Żółty (skrzynia) | Skrzynia na wytrych | Picklock chest |
 | 🟦 Cyjan | Skrzynia na klucz | Key chest |
+| 🟨 Złoty (linia) | Cel nawigacji | Navigation target |
 
 ### Opcje konfiguracji / Configuration Options
 Menu dostępne przez: `Opcje → Union → Tieru Plugins → Ustawienia Minimapy`
@@ -59,10 +68,22 @@ Menu dostępne przez: `Opcje → Union → Tieru Plugins → Ustawienia Minimapy
 
 ## ⌨️ Skróty klawiszowe / Keyboard Shortcuts
 
-| Klawisz | Akcja |
-|---------|-------|
-| `;` lub `,` | Oddal mapę (zoom out) |
-| `'` lub `.` | Przybliż mapę (zoom in) |
+### Zoom minimapy / Minimap Zoom
+| Klawisz | Akcja (PL) | Action (EN) |
+|---------|------------|-------------|
+| `;` lub `,` | Oddal mapę | Zoom out |
+| `'` lub `.` | Przybliż mapę | Zoom in |
+
+### Nawigacja do NPC / NPC Navigation (v3.0)
+| Klawisz | Akcja (PL) | Action (EN) |
+|---------|------------|-------------|
+| `]` | Otwórz/zamknij menu nawigacji | Open/close navigation menu |
+| `F` | Włącz tryb wyszukiwania | Enable search mode |
+| `↑` `↓` | Wybierz NPC z listy | Select NPC from list |
+| `Page Up/Down` | Przewiń listę (10 pozycji) | Scroll list (10 items) |
+| `Enter` | Ustaw cel nawigacji | Set navigation target |
+| `Backspace` | Wyczyść cel nawigacji | Clear navigation target |
+| `Escape` | Zamknij menu / Anuluj szukanie | Close menu / Cancel search |
 
 ## ⚠️ Wymagania / Requirements
 
@@ -119,6 +140,14 @@ MapZoom=3
 ```
 
 ## 📝 Historia zmian / Changelog
+
+### v3.0 (2024-12)
+- ✨ **Nawigacja do NPC** - Menu wyboru NPC z wyszukiwaniem (klawisz `]`)
+- ✨ **Linia nawigacji** - Złota linia prowadząca do wybranego NPC/wroga
+- ✨ **Automatyczne dotarcie** - Linia znika gdy dotrzesz do celu
+- ✨ **Filtrowanie NPC** - Wyszukiwanie po nazwie w czasie rzeczywistym
+- ✨ **Wyświetlanie dystansu** - Odległość do celu w metrach
+- 🔧 Blokowanie sterowania gry podczas korzystania z menu nawigacji
 
 ### v2.0 (2024-12)
 - ✨ Rotacja mapy zgodnie z kierunkiem postaci

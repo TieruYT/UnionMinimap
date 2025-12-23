@@ -1,0 +1,93 @@
+# 🗺️ Tieru Minimap v2.0 - Plugin Union dla Gothic 2 Noc Kruka
+
+## 📖 Opis
+Zaawansowana minimapa z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci oraz zoom klawiszami.
+
+---
+
+## 🌟 Główne funkcje
+
+**Minimapa:**
+• Rotacja mapy zgodnie z kierunkiem postaci (domyślnie włączone)
+• Zoom klawiszami (`;` i `'` lub `,` i `.`)
+• Strzałka gracza jako tekstura
+
+**Wskaźniki na mapie:**
+🟡 Żółty - Gracz (strzałka)
+🔴 Czerwony - Wrogowie (zawsze widoczni)
+🟠 Pomarańczowy - Ważny NPC
+⚪ Biały - Neutralni NPC
+🔵 Niebieski - Przedmioty
+🟢 Zielony - Rośliny i zioła
+🟢 Zielony (skrzynia) - Otwarta skrzynia
+🟡 Żółty (skrzynia) - Skrzynia na wytrych
+🔵 Cyjan - Skrzynia na klucz
+
+---
+
+## ⚙️ 13 opcji konfiguracyjnych w menu
+
+`Opcje → Union → Tieru Plugins → Ustawienia Minimapy`
+
+• Pokaż Minimapę
+• Pokaż Skrzynie
+• Ukryj zamknięte na klucz
+• Wszyscy NPC na biało (wrogowie nadal czerwoni!)
+• Pokaż Przedmioty
+• Pokaż Rośliny
+• Pokaż Wrogów
+• Pokaż Nazwy NPC
+• Pokaż Nazwy Przedmiotów
+• Pokaż Nazwy Roślin
+• Obracanie Mapy
+• Zasięg Nazw NPC (1000-3500)
+• Zoom Mapy (1500-4000)
+
+---
+
+## ⌨️ Skróty klawiszowe
+
+`;` lub `,` → Oddal mapę
+`'` lub `.` → Przybliż mapę
+
+---
+
+## ⚠️ Wymagania
+
+• Gothic 2 Noc Kruka
+• Union SDK 1.0m+
+• zParserExtender
+• Union_Menu
+
+---
+
+## 📥 Instalacja
+
+1. Pobierz plik `.vdf` z GitHub Releases
+2. Umieść w folderze `Data/` w katalogu gry
+3. Uruchom grę - minimapa pojawi się automatycznie
+
+---
+
+## 📝 Co nowego w v2.0
+
+✨ Rotacja mapy zgodnie z kierunkiem postaci
+✨ Zoom mapy klawiszami
+✨ Wyświetlanie przedmiotów i roślin
+✨ Wyświetlanie nazw NPC, przedmiotów i roślin
+✨ Konfigurowalny zasięg nazw NPC
+✨ Strzałka gracza jako tekstura
+✨ Wrogowie zawsze czerwoni (nawet przy "Wszyscy NPC na biało")
+✨ 13 opcji konfiguracyjnych
+
+---
+
+## 🔗 Linki
+
+**GitHub:** https://github.com/TieruYT/UnionMinimap
+**Releases:** https://github.com/TieruYT/UnionMinimap/releases
+
+---
+
+*Mod stworzony przy wsparciu AI (Gemini 3 Pro, Claude 4.5 Opus)*
+*Autor: Tieru*

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <windows.h>
 
 namespace GOTHIC_ENGINE {
 
@@ -41,7 +42,24 @@ namespace GOTHIC_ENGINE {
 
   // Zoom mapy - wartości: 0=1500, 1=2000, 2=2500, 3=3000, 4=3500, 5=4000
   int opt_MapZoom = 3;        // Domyślnie 3000 (indeks 3)
-  float currentMapRange = 3000.0f;      
+  float currentMapRange = 3000.0f;
+
+  // ========================================================================
+  // NAVIGATION SYSTEM
+  // ========================================================================
+  oCNpc* navTarget = nullptr;           // Aktualny cel nawigacji
+  bool showNavMenu = false;             // Czy pokazać menu wyboru NPC
+  std::vector<oCNpc*> navNpcList;       // Lista NPC do wyboru
+  int navSelectedIndex = 0;             // Zaznaczony NPC w menu
+  std::string navSearchBuffer = "";     // Bufor wyszukiwania
+  zCView* pNavMenu = nullptr;           // Widok menu nawigacji
+  bool navTypingMode = false;           // Czy jesteśmy w trybie wpisywania
+  DWORD navLastInputTime = 0;           // Czas ostatniego inputu
+
+  // Flush all key states (Windows API)
+  void FlushKeys() {
+      for (int i = 0; i < 256; i++) GetAsyncKeyState(i);
+  }      
 
   // ========================================================================
   // HELPERS
@@ -208,6 +226,388 @@ namespace GOTHIC_ENGINE {
       }
 
       return false;
+  }
+
+  // ========================================================================
+  // NAVIGATION FUNCTIONS
+  // ========================================================================
+
+  // Buduje listę wszystkich żywych NPC w świecie gry
+  void BuildNpcList() {
+      navNpcList.clear();
+      if (!ogame || !ogame->GetGameWorld()) return;
+
+      zCListSort<oCNpc>* list = ogame->GetGameWorld()->voblist_npcs;
+      while (list) {
+          oCNpc* npc = list->GetData();
+          list = list->next;
+
+          if (!npc || npc == player) continue;
+          if (npc->attribute[0] <= 0) continue;  // Pomiń martwych
+
+          // Sprawdź czy koordynaty nie są 0,0,0
+          zVEC3 pos = npc->GetPositionWorld();
+          if (pos[0] == 0.0f && pos[1] == 0.0f && pos[2] == 0.0f) continue;
+
+          // Jeśli jest filtr wyszukiwania - sprawdź nazwę
+          if (!navSearchBuffer.empty()) {
+              std::string npcName = ToStdString(npc->GetName(0));
+              std::string search = navSearchBuffer;
+              // Konwertuj na małe litery do porównania
+              std::transform(npcName.begin(), npcName.end(), npcName.begin(), ::tolower);
+              std::transform(search.begin(), search.end(), search.begin(), ::tolower);
+              if (npcName.find(search) == std::string::npos) continue;
+          }
+
+          navNpcList.push_back(npc);
+      }
+
+      // Sortuj alfabetycznie
+      std::sort(navNpcList.begin(), navNpcList.end(), [](oCNpc* a, oCNpc* b) {
+          return ToStdString(a->GetName(0)) < ToStdString(b->GetName(0));
+      });
+
+      // Resetuj indeks jeśli wyszedł poza zakres
+      if (navSelectedIndex >= (int)navNpcList.size()) {
+          navSelectedIndex = navNpcList.size() > 0 ? (int)navNpcList.size() - 1 : 0;
+      }
+  }
+
+  // Rysuje menu wyboru NPC
+  void DrawNavMenu() {
+      if (!showNavMenu) {
+          if (pNavMenu) {
+              screen->RemoveItem(pNavMenu);
+              delete pNavMenu;
+              pNavMenu = nullptr;
+          }
+          return;
+      }
+
+      if (!pNavMenu) return;
+
+      pNavMenu->ClrPrintwin();
+      pNavMenu->SetFont("FONT_Default.tga");
+
+      // Tytuł - zależy od trybu
+      zSTRING title;
+      if (navTypingMode) {
+          pNavMenu->SetFontColor(zCOLOR(100, 255, 100));
+          title = "SZUKAJ: ";
+          title += navSearchBuffer.c_str();
+          title += "_";
+      } else if (!navSearchBuffer.empty()) {
+          pNavMenu->SetFontColor(zCOLOR(255, 255, 0));
+          title = "FILTR: ";
+          title += navSearchBuffer.c_str();
+          title += " (F = szukaj)";
+      } else {
+          pNavMenu->SetFontColor(zCOLOR(255, 255, 0));
+          title = "=== NAWIGACJA DO NPC ===";
+      }
+      pNavMenu->Print(100, 100, title);
+
+      // Instrukcje
+      pNavMenu->SetFontColor(zCOLOR(180, 180, 180));
+      if (navTypingMode) {
+          pNavMenu->Print(100, 400, "Wpisz nazwe NPC | Enter: wybierz | Esc: anuluj");
+      } else {
+          pNavMenu->Print(100, 400, "Strzalki: wybierz | Enter: nawiguj | F: szukaj");
+          pNavMenu->Print(100, 650, "Backspace: usun cel | Esc: zamknij");
+      }
+
+      // Lista NPC (max 10 widocznych)
+      int startIdx = navSelectedIndex - 5;
+      if (startIdx < 0) startIdx = 0;
+      int endIdx = startIdx + 10;
+      if (endIdx > (int)navNpcList.size()) endIdx = (int)navNpcList.size();
+
+      int yPos = 1300;
+      for (int i = startIdx; i < endIdx; i++) {
+          oCNpc* npc = navNpcList[i];
+          if (!npc) continue;
+
+          // Oblicz dystans
+          float dist = npc->GetDistanceToVob(*player);
+          int distMeters = (int)(dist / 100.0f);  // ~100 jednostek = 1m
+
+          // Zbuduj tekst
+          zSTRING line = "";
+          if (i == navSelectedIndex) {
+              line = "> ";
+              pNavMenu->SetFontColor(zCOLOR(255, 255, 0));  // Żółty dla zaznaczonego
+          } else {
+              line = "  ";
+              pNavMenu->SetFontColor(zCOLOR(255, 255, 255));  // Biały
+          }
+
+          line += npc->GetName(0);
+          line += " (";
+          line += Z distMeters;
+          line += "m)";
+
+          pNavMenu->Print(100, yPos, line);
+          yPos += 400;
+      }
+
+      // Informacja o liczbie wyników
+      pNavMenu->SetFontColor(zCOLOR(150, 150, 150));
+      zSTRING countInfo = "Znaleziono: ";
+      countInfo += Z (int)navNpcList.size();
+      countInfo += " NPC";
+      pNavMenu->Print(100, 7000, countInfo);
+  }
+
+  // Otwiera menu nawigacji
+  void OpenNavMenu() {
+      // Utwórz widok menu jeśli nie istnieje
+      if (!pNavMenu) {
+          pNavMenu = new zCView(1500, 500, 6500, 7500);
+          pNavMenu->InsertBack("DEFAULT.TGA");
+          pNavMenu->SetColor(zCOLOR(0, 0, 0, 220));
+          pNavMenu->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
+          pNavMenu->SetTransparency(220);
+      }
+      screen->InsertItem(pNavMenu);
+
+      showNavMenu = true;
+      navTypingMode = false;
+      navSearchBuffer = "";
+      navSelectedIndex = 0;
+      BuildNpcList();
+      zinput->ClearKeyBuffer();
+      FlushKeys();
+  }
+
+  // Zamyka menu nawigacji
+  void CloseNavMenu() {
+      if (pNavMenu) {
+          screen->RemoveItem(pNavMenu);
+      }
+      showNavMenu = false;
+      navTypingMode = false;
+  }
+
+  // Obsługa klawiszy dla menu nawigacji (Windows API)
+  void HandleNavKeys() {
+      if (!screen || !player) return;
+
+      DWORD currentTime = GetTickCount();
+
+      // Klawisz ] - otwórz/zamknij menu nawigacji (VK_OEM_6 = ])
+      if (GetAsyncKeyState(VK_OEM_6) & 0x8000) {
+          if (currentTime - navLastInputTime > 300) {
+              if (!showNavMenu) OpenNavMenu();
+              else CloseNavMenu();
+              navLastInputTime = currentTime;
+          }
+      }
+
+      if (showNavMenu && pNavMenu) {
+          // --- TRYB WPISYWANIA ---
+          if (navTypingMode) {
+              bool updated = false;
+
+              // Nawigacja strzałkami (działa też w trybie wpisywania)
+              if (currentTime - navLastInputTime > 100) {
+                  if (GetAsyncKeyState(VK_UP) & 0x8000) {
+                      if (navSelectedIndex > 0) navSelectedIndex--;
+                      navLastInputTime = currentTime;
+                  }
+                  if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+                      if (navSelectedIndex < (int)navNpcList.size() - 1) navSelectedIndex++;
+                      navLastInputTime = currentTime;
+                  }
+                  if (GetAsyncKeyState(VK_PRIOR) & 0x8000) { navSelectedIndex -= 10; navLastInputTime = currentTime + 100; }
+                  if (GetAsyncKeyState(VK_NEXT) & 0x8000) { navSelectedIndex += 10; navLastInputTime = currentTime + 100; }
+              }
+
+              // Litery A-Z (& 1 = single press)
+              for (int key = 'A'; key <= 'Z'; key++) {
+                  if (GetAsyncKeyState(key) & 1) {
+                      navSearchBuffer += (char)key;
+                      updated = true;
+                  }
+              }
+              // Cyfry 0-9
+              for (int key = '0'; key <= '9'; key++) {
+                  if (GetAsyncKeyState(key) & 1) {
+                      navSearchBuffer += (char)key;
+                      updated = true;
+                  }
+              }
+              // Spacja
+              if (GetAsyncKeyState(VK_SPACE) & 1) {
+                  navSearchBuffer += ' ';
+                  updated = true;
+              }
+              // Backspace - usuń znak
+              if (GetAsyncKeyState(VK_BACK) & 1) {
+                  if (!navSearchBuffer.empty()) {
+                      navSearchBuffer.pop_back();
+                      updated = true;
+                  }
+              }
+              // Enter - zakończ wpisywanie i wybierz NPC
+              if (GetAsyncKeyState(VK_RETURN) & 1) {
+                  if (!navNpcList.empty() && navSelectedIndex >= 0 && navSelectedIndex < (int)navNpcList.size()) {
+                      navTarget = navNpcList[navSelectedIndex];
+                      CloseNavMenu();
+                      navLastInputTime = currentTime + 300;
+                  } else {
+                      navTypingMode = false;
+                  }
+              }
+              // Escape - anuluj wyszukiwanie
+              if (GetAsyncKeyState(VK_ESCAPE) & 1) {
+                  navTypingMode = false;
+                  navSearchBuffer = "";
+                  updated = true;
+              }
+
+              if (updated) BuildNpcList();
+          }
+          // --- TRYB NAWIGACJI ---
+          else {
+              if (currentTime - navLastInputTime > 100) {
+                  if (GetAsyncKeyState(VK_UP) & 0x8000) {
+                      if (navSelectedIndex > 0) navSelectedIndex--;
+                      navLastInputTime = currentTime;
+                  }
+                  if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
+                      if (navSelectedIndex < (int)navNpcList.size() - 1) navSelectedIndex++;
+                      navLastInputTime = currentTime;
+                  }
+                  if (GetAsyncKeyState(VK_PRIOR) & 0x8000) { navSelectedIndex -= 10; navLastInputTime = currentTime + 100; }
+                  if (GetAsyncKeyState(VK_NEXT) & 0x8000) { navSelectedIndex += 10; navLastInputTime = currentTime + 100; }
+
+                  // Enter - wybierz NPC jako cel
+                  if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
+                      if (!navNpcList.empty() && navSelectedIndex >= 0 && navSelectedIndex < (int)navNpcList.size()) {
+                          navTarget = navNpcList[navSelectedIndex];
+                          CloseNavMenu();
+                      }
+                      navLastInputTime = currentTime + 500;
+                  }
+                  // Escape - zamknij menu
+                  if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
+                      CloseNavMenu();
+                      navLastInputTime = currentTime + 200;
+                  }
+                  // F - włącz tryb wpisywania
+                  if (GetAsyncKeyState('F') & 0x8000) {
+                      navTypingMode = true;
+                      navLastInputTime = currentTime + 300;
+                      FlushKeys();
+                  }
+                  // Backspace - wyczyść cel nawigacji
+                  if (GetAsyncKeyState(VK_BACK) & 0x8000) {
+                      navTarget = nullptr;
+                      navLastInputTime = currentTime + 300;
+                  }
+              }
+          }
+
+          // Clamp index
+          if (navSelectedIndex < 0) navSelectedIndex = (int)navNpcList.size() - 1;
+          if (navSelectedIndex >= (int)navNpcList.size()) navSelectedIndex = 0;
+
+          // Blokuj input gry
+          zinput->ClearKeyBuffer();
+          FlushKeys();
+      }
+  }
+
+  // Rysuje linię nawigacyjną od gracza do celu
+  void DrawNavLine(zCView* view, int centerX, int centerY, float scale, float mapRotation) {
+      if (!navTarget || !player) return;
+
+      // Sprawdź czy cel jest żywy
+      if (navTarget->attribute[0] <= 0) {
+          navTarget = nullptr;
+          return;
+      }
+
+      // Sprawdź czy gracz dotarł do celu (dystans < 300 jednostek = ~3m)
+      float distToTarget = navTarget->GetDistanceToVob(*player);
+      if (distToTarget < 300.0f) {
+          navTarget = nullptr;  // Cel osiągnięty - wyczyść nawigację
+          return;
+      }
+
+      // Pobierz pozycję celu
+      zVEC3 targetPos = navTarget->GetPositionWorld();
+
+      // Sprawdź czy koordynaty są prawidłowe (nie 0,0,0)
+      if (targetPos[0] == 0.0f && targetPos[1] == 0.0f && targetPos[2] == 0.0f) {
+          return;
+      }
+
+      zVEC3 plrPos = player->GetPositionWorld();
+      float relX = targetPos[0] - plrPos[0];
+      float relZ = targetPos[2] - plrPos[2];
+
+      // Rotacja mapy jeśli włączona
+      if (opt_RotateMap) {
+          RotatePoint(relX, relZ, mapRotation);
+      }
+
+      int targetMapX = centerX + (int)(relX * scale);
+      int targetMapY = centerY - (int)(relZ * scale);
+
+      // Ogranicz pozycję do granic mapy
+      bool targetVisible = true;
+      if (targetMapX < 0) { targetMapX = 100; targetVisible = false; }
+      if (targetMapX > 8192) { targetMapX = 8092; targetVisible = false; }
+      if (targetMapY < 0) { targetMapY = 100; targetVisible = false; }
+      if (targetMapY > 8192) { targetMapY = 8092; targetVisible = false; }
+
+      // Rysuj linię od środka (gracza) do celu
+      view->SetFontColor(zCOLOR(255, 200, 0));  // Złota linia nawigacji
+
+      // Rysuj linię jako serię kropek
+      float dx = (float)(targetMapX - centerX);
+      float dy = (float)(targetMapY - centerY);
+      float dist = sqrt(dx * dx + dy * dy);
+      int steps = (int)(dist / 100.0f);  // Co ~100 jednostek
+      if (steps < 5) steps = 5;
+      if (steps > 100) steps = 100;
+
+      for (int i = 0; i <= steps; i++) {
+          float t = (float)i / (float)steps;
+          int px = centerX + (int)(dx * t);
+          int py = centerY + (int)(dy * t);
+
+          if (px >= 0 && px <= 8192 && py >= 0 && py <= 8192) {
+              view->Print(px, py, ".");
+          }
+      }
+
+      // Narysuj marker celu (większa kropka/kwadrat)
+      view->SetFontColor(zCOLOR(255, 100, 0));  // Pomarańczowy marker celu
+      for (int dx = -50; dx <= 50; dx += 50) {
+          for (int dy = -50; dy <= 50; dy += 50) {
+              int px = targetMapX + dx;
+              int py = targetMapY + dy;
+              if (px >= 0 && px <= 8192 && py >= 0 && py <= 8192) {
+                  view->Print(px, py, ".");
+              }
+          }
+      }
+
+      // Wyświetl nazwę celu i dystans nad markerem
+      int distMeters = (int)(distToTarget / 100.0f);
+
+      zSTRING targetLabel = navTarget->GetName(0);
+      targetLabel += " (";
+      targetLabel += Z distMeters;
+      targetLabel += "m)";
+
+      view->SetFont("FONT_Default.tga");
+      view->SetFontColor(zCOLOR(255, 200, 0));
+      int labelY = targetMapY - 150;
+      if (labelY < 100) labelY = targetMapY + 100;
+      view->Print(targetMapX - 100, labelY, targetLabel);
   }
 
   // ========================================================================
@@ -508,6 +908,9 @@ namespace GOTHIC_ENGINE {
                   }
               }
           }
+
+          // Rysuj linię nawigacyjną do celu (przed strzałką gracza)
+          DrawNavLine(pMinimap, centerX, centerY, scale, mapRotation);
       }
 
       // Strzałka gracza z tekstury O.TGA - na wierzchu wszystkich elementów
@@ -536,8 +939,10 @@ namespace GOTHIC_ENGINE {
 
       LoadOptions();
       HandleZoomKeys();  // Obsługa klawiszy zoom: ; (oddal) i ' (przybliż)
+      HandleNavKeys();   // Obsługa klawiszy nawigacji: ] (otwórz menu)
 
       DrawMinimap();
+      DrawNavMenu();     // Rysowanie menu wyboru NPC (jeśli otwarte)
   }
 
   TSaveLoadGameInfo& SaveLoadGameInfo = UnionCore::SaveLoadGameInfo;
