@@ -141,7 +141,7 @@ MapZoom=3
 
 ## 📝 Historia zmian / Changelog
 
-### v3.0 (2024-12)
+### v3.0 (2025-12-23)
 - ✨ **Nawigacja do NPC** - Menu wyboru NPC z wyszukiwaniem (klawisz `]`)
 - ✨ **Linia nawigacji** - Złota linia prowadząca do wybranego NPC/wroga
 - ✨ **Automatyczne dotarcie** - Linia znika gdy dotrzesz do celu
@@ -149,7 +149,7 @@ MapZoom=3
 - ✨ **Wyświetlanie dystansu** - Odległość do celu w metrach
 - 🔧 Blokowanie sterowania gry podczas korzystania z menu nawigacji
 
-### v2.0 (2024-12)
+### v2.0 (2025-12-22)
 - ✨ Rotacja mapy zgodnie z kierunkiem postaci
 - ✨ Zoom mapy klawiszami (`;'` lub `,.`)
 - ✨ Wyświetlanie przedmiotów i roślin na mapie
@@ -160,10 +160,10 @@ MapZoom=3
 - ✨ 13 opcji konfiguracyjnych w menu
 - 🔧 Optymalizacja renderowania
 
-### v1.0
-- Podstawowa minimapa
-- Wyświetlanie NPC i skrzyń
-- 4 opcje konfiguracyjne
+### v1.0 (2025-12-12)
+- ✨ Podstawowa minimapa
+- ✨ Wyświetlanie NPC i skrzyń
+- ✨ 4 opcje konfiguracyjne
 
 ## 🤝 Wkład / Contributing
 
