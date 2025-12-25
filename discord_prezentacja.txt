@@ -1,7 +1,9 @@
-# 🗺️ Tieru Minimap v2.0 - Plugin Union dla Gothic 2 Noc Kruka
+# 🗺️ Tieru Minimap v3.1 - Plugin Union dla Gothic 1 i Gothic 2
 
 ## 📖 Opis
-Zaawansowana minimapa z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci oraz zoom klawiszami.
+Zaawansowana minimapa z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci, zoom klawiszami oraz nawigację do wybranego NPC.
+
+**Kompatybilność:** Gothic 1, Gothic 1 Addon, Gothic 2, Gothic 2 Noc Kruka
 
 ---
 
@@ -25,9 +27,9 @@ Zaawansowana minimapa z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wr
 
 ---
 
-## ⚙️ 13 opcji konfiguracyjnych w menu
+## ⚙️ 14 opcji konfiguracyjnych w menu
 
-`Opcje → Union → Tieru Plugins → Ustawienia Minimapy`
+`Opcje → Union → Tieru Plugins → Minimap`
 
 • Pokaż Minimapę
 • Pokaż Skrzynie
@@ -42,19 +44,35 @@ Zaawansowana minimapa z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wr
 • Obracanie Mapy
 • Zasięg Nazw NPC (1000-3500)
 • Zoom Mapy (1500-4000)
+• Pokaż Kompas (N/E/S/W na ramce)
 
 ---
 
-## ⌨️ Skróty klawiszowe
+## ⌨️ Skróty klawiszowe (konfigurowalne!)
 
-`;` lub `,` → Oddal mapę
-`'` lub `.` → Przybliż mapę
+`Opcje → Union → Tieru Plugins → Skroty klawiszowe`
+
+**Domyślne:**
+`.` → Przybliż mapę
+`,` → Oddal mapę
+`/` → Pokaż/ukryj legendę
+`\` → Otwórz wyszukiwarkę NPC
+
+**Dostępne klawisze do wyboru:**
+`. , ; ' [ ] - = / \ F1 F2 F3 F4 F5 F6 NUM+ NUM- NUM* PGUP PGDN`
+
+---
+
+## 📸 Zrzuty ekranu
+
+![Skróty klawiszowe](skroty.png)
+![Legenda kolorów](legenda.png)
 
 ---
 
 ## ⚠️ Wymagania
 
-• Gothic 2 Noc Kruka
+• Gothic 1 / Gothic 2 Noc Kruka
 • Union SDK 1.0m+
 • zParserExtender
 • Union_Menu
@@ -69,16 +87,18 @@ Zaawansowana minimapa z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wr
 
 ---
 
-## 📝 Co nowego w v2.0
+## 📝 Co nowego w v3.1
 
-✨ Rotacja mapy zgodnie z kierunkiem postaci
-✨ Zoom mapy klawiszami
-✨ Wyświetlanie przedmiotów i roślin
-✨ Wyświetlanie nazw NPC, przedmiotów i roślin
-✨ Konfigurowalny zasięg nazw NPC
-✨ Strzałka gracza jako tekstura
-✨ Wrogowie zawsze czerwoni (nawet przy "Wszyscy NPC na biało")
-✨ 13 opcji konfiguracyjnych
+✨ **Wsparcie dla Gothic 1** - Jeden DLL dla wszystkich wersji gry!
+✨ **Konfigurowalne skróty klawiszowe** - Wybierz własne klawisze w menu
+✨ **Kompas N/E/S/W** - Kierunki świata na ramce minimapy
+✨ **Legenda kolorów** - Wyświetl klawiszem `/`
+✨ **Nawigacja do NPC** - Wyszukiwarka z linią prowadzącą
+✨ 20 klawiszy do wyboru (F1-F6, NUM, PGUP/PGDN i więcej)
+
+### Poprzednie wersje:
+**v3.0:** Nawigacja do NPC, wyszukiwarka, linia prowadząca
+**v2.0:** Rotacja mapy, zoom, nazwy obiektów, 13 opcji
 
 ---
 

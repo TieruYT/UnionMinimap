@@ -70,6 +70,21 @@ instance MenuItem_Tieru_List_Minimap(C_MENU_ITEM_DEF)
   text[1]        = "Konfiguracja minimapy";
 };
 
+// Wpis "Skróty klawiszowe"
+instance MenuItem_Tieru_List_Keybinds(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + Menu_DY;
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_STARTMENU;
+  onselaction_s[0] = "QuestHelper:Menu_Keybinds_Settings";
+  text[0]        = "Skroty klawiszowe";
+  text[1]        = "Konfiguracja skrotow klawiszowych";
+};
+
 // ================================================================================================
 // POZIOM 3: KONFIGURACJA MINIMAPY
 // ================================================================================================
@@ -496,4 +511,184 @@ instance MenuItem_MM_OPT_MapZoom_Choice(C_MENU_ITEM_DEF)
   onchgsetoption        = "MapZoom";
   onchgsetoptionsection = "QUESTHELPER_V2";
   text[0]               = "1500|2000|2500|3000|3500|4000";
+};
+
+// --- Show Compass ---
+instance MenuItem_MM_OPT_ShowCompass(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 13);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Pokaz Kompas";
+  text[1]        = "Wyswietla kierunki swiata (N/E/S/W) na ramce";
+};
+
+instance MenuItem_MM_OPT_ShowCompass_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 13) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "ShowCompass";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "Wyl|Wl";
+};
+
+// ================================================================================================
+// POZIOM 3: SKRÓTY KLAWISZOWE
+// ================================================================================================
+
+instance Menu_Keybinds_Settings(C_MENU_DEF)
+{
+  backpic    = "";
+  items[0]   = "";
+  items[100] = "Union_menuitem_back";
+  flags      = flags | MENU_SHOW_INFO;
+  Menu_SearchItems("QuestHelper:MENUITEM_KB_OPT_*");
+};
+
+// --- Headline ---
+instance MenuItem_KB_OPT_Headline(C_MENU_ITEM_DEF)
+{
+  type    = MENU_ITEM_TEXT;
+  posx    = 0;
+  posy    = Title_PY;
+  dimx    = 8100;
+  flags   = flags & ~IT_SELECTABLE;
+  flags   = flags | IT_TXT_CENTER;
+  text[0] = "SKROTY KLAWISZOWE";
+};
+
+// --- Key Zoom In ---
+instance MenuItem_KB_OPT_ZoomIn(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY;
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Przybliz mape";
+  text[1]        = "Klawisz do przyblizania minimapy";
+};
+
+instance MenuItem_KB_OPT_ZoomIn_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyZoomIn";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = ".|,|;|'|[|]|-|=|/|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN";
+};
+
+// --- Key Zoom Out ---
+instance MenuItem_KB_OPT_ZoomOut(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + Menu_DY;
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Oddal mape";
+  text[1]        = "Klawisz do oddalania minimapy";
+};
+
+instance MenuItem_KB_OPT_ZoomOut_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + Menu_DY + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyZoomOut";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = ",|.|;|'|[|]|-|=|/|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN";
+};
+
+// --- Key Legend ---
+instance MenuItem_KB_OPT_Legend(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 2);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Legenda";
+  text[1]        = "Klawisz do wlaczania legendy";
+};
+
+instance MenuItem_KB_OPT_Legend_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 2) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyLegend";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "/|.|,|;|'|[|]|-|=|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN";
+};
+
+// --- Key NPC Search ---
+instance MenuItem_KB_OPT_NpcSearch(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 3);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Szukaj NPC";
+  text[1]        = "Klawisz do otwierania wyszukiwarki NPC";
+};
+
+instance MenuItem_KB_OPT_NpcSearch_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 3) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyNpcSearch";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "\\|/|.|,|;|'|[|]|-|=|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN";
 };

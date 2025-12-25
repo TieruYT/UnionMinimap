@@ -1,12 +1,14 @@
-# Gothic 2 Union Plugin: Tieru Minimap
+# Gothic 1 & 2 Union Plugin: Tieru Minimap
 
-![Gothic 2](https://img.shields.io/badge/Game-Gothic%202%20NoTR-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.0-orange)
+![Gothic](https://img.shields.io/badge/Game-Gothic%201%20%26%202-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.1-orange)
 
 ## 📖 Opis / Description
 
-**(PL)** Zaawansowany plugin do gry Gothic 2 Noc Kruka (Union), dodający funkcjonalną minimapę z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci, zoom klawiszami oraz **nawigację do wybranego NPC**.
+**(PL)** Zaawansowany plugin do gry Gothic 1 i Gothic 2 (Union), dodający funkcjonalną minimapę z wieloma opcjami konfiguracji. Wyświetla pozycje NPC, wrogów, skrzyń, przedmiotów i roślin. Obsługuje rotację mapy zgodnie z kierunkiem postaci, zoom klawiszami, **konfigurowalne skróty klawiszowe** oraz **nawigację do wybranego NPC**.
 
-**(EN)** An advanced Gothic 2 Night of the Raven (Union) plugin that adds a functional minimap with many configuration options. Displays positions of NPCs, enemies, chests, items, and plants. Supports map rotation according to character direction, keyboard zoom, and **navigation to selected NPC**.
+**(EN)** An advanced Gothic 1 and Gothic 2 (Union) plugin that adds a functional minimap with many configuration options. Displays positions of NPCs, enemies, chests, items, and plants. Supports map rotation according to character direction, keyboard zoom, **customizable keybindings** and **navigation to selected NPC**.
+
+**Kompatybilność / Compatibility:** Gothic 1, Gothic 1 Addon, Gothic 2, Gothic 2 Night of the Raven
 
 ### ⚠️ Uwaga o rozwoju / Development Notice
 
@@ -19,6 +21,10 @@
 | Ustawienia Minimapy | Nawigacja do NPC | Linia nawigacji |
 |:---:|:---:|:---:|
 | ![Minimap Settings](screenshot.png) | ![NPC Navigation Menu](screenshot2.png) | ![Navigation Line](screenshot3.png) |
+
+| Skróty klawiszowe | Legenda kolorów |
+|:---:|:---:|
+| ![Keybindings](skroty.png) | ![Color Legend](legenda.png) |
 
 ## 🌟 Funkcje / Features
 
@@ -68,16 +74,23 @@ Menu dostępne przez: `Opcje → Union → Tieru Plugins → Ustawienia Minimapy
 
 ## ⌨️ Skróty klawiszowe / Keyboard Shortcuts
 
-### Zoom minimapy / Minimap Zoom
-| Klawisz | Akcja (PL) | Action (EN) |
-|---------|------------|-------------|
-| `;` lub `,` | Oddal mapę | Zoom out |
-| `'` lub `.` | Przybliż mapę | Zoom in |
+### Konfigurowalne skróty / Configurable Shortcuts (v3.1)
+Ustaw własne klawisze w menu: `Opcje → Union → Tieru Plugins → Skroty klawiszowe`
+
+| Funkcja | Domyślny klawisz | Default key |
+|---------|------------------|-------------|
+| Przybliż mapę / Zoom in | `.` | `.` |
+| Oddal mapę / Zoom out | `,` | `,` |
+| Legenda / Legend | `/` | `/` |
+| Szukaj NPC / Search NPC | `\` | `\` |
+
+**Dostępne klawisze / Available keys:**
+`. , ; ' [ ] - = / \ F1 F2 F3 F4 F5 F6 NUM+ NUM- NUM* PGUP PGDN`
 
 ### Nawigacja do NPC / NPC Navigation (v3.0)
 | Klawisz | Akcja (PL) | Action (EN) |
 |---------|------------|-------------|
-| `]` | Otwórz/zamknij menu nawigacji | Open/close navigation menu |
+| `\` (domyślnie) | Otwórz/zamknij menu nawigacji | Open/close navigation menu |
 | `F` | Włącz tryb wyszukiwania | Enable search mode |
 | `↑` `↓` | Wybierz NPC z listy | Select NPC from list |
 | `Page Up/Down` | Przewiń listę (10 pozycji) | Scroll list (10 items) |
@@ -87,10 +100,10 @@ Menu dostępne przez: `Opcje → Union → Tieru Plugins → Ustawienia Minimapy
 
 ## ⚠️ Wymagania / Requirements
 
-1.  **Gra:** Gothic 2 Noc Kruka (Night of the Raven)
-2.  **Silnik:** Union SDK 1.0m lub nowszy
-3.  **Rozdzielczość:** Testowano na 2560x1440 (2K)
-4.  **Wymagane pluginy:**
+1.  **Gra / Game:** Gothic 1, Gothic 1 Addon, Gothic 2, Gothic 2 Noc Kruka
+2.  **Silnik / Engine:** Union SDK 1.0m lub nowszy / or newer
+3.  **Rozdzielczość / Resolution:** Testowano na 2560x1440 (2K)
+4.  **Wymagane pluginy / Required plugins:**
     *   `zParserExtender`
     *   `Union_Menu`
 
@@ -141,8 +154,16 @@ MapZoom=3
 
 ## 📝 Historia zmian / Changelog
 
+### v3.1 (2025-12-25)
+- ✨ **Wsparcie dla Gothic 1** - Jeden DLL dla G1, G1A, G2, G2A!
+- ✨ **Konfigurowalne skróty klawiszowe** - Menu do zmiany klawiszy
+- ✨ **Kompas N/E/S/W** - Kierunki świata na ramce minimapy
+- ✨ **Legenda kolorów** - Wyświetl klawiszem `/`
+- ✨ **20 klawiszy do wyboru** - F1-F6, NUM+/-/*, PGUP/PGDN i więcej
+- 🔧 Opcja wyłączenia kompasu w menu
+
 ### v3.0 (2025-12-23)
-- ✨ **Nawigacja do NPC** - Menu wyboru NPC z wyszukiwaniem (klawisz `]`)
+- ✨ **Nawigacja do NPC** - Menu wyboru NPC z wyszukiwaniem (klawisz `\`)
 - ✨ **Linia nawigacji** - Złota linia prowadząca do wybranego NPC/wroga
 - ✨ **Automatyczne dotarcie** - Linia znika gdy dotrzesz do celu
 - ✨ **Filtrowanie NPC** - Wyszukiwanie po nazwie w czasie rzeczywistym

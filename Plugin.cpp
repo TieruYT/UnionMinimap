@@ -39,10 +39,17 @@ namespace GOTHIC_ENGINE {
   int opt_ShowPlantNames = 0; // Pokaż nazwy roślin
   int opt_RotateMap = 1;      // Obracaj mapę zgodnie z kierunkiem gracza (domyślnie włączone)
   int opt_NpcNameRange = 500; // Zasięg wyświetlania nazw NPC (w jednostkach gry, ~100 = 1m)
+  int opt_ShowCompass = 1;    // Pokaż kompas (N/S/E/W) na ramce minimapy
 
   // Zoom mapy - wartości: 0=1500, 1=2000, 2=2500, 3=3000, 4=3500, 5=4000
   int opt_MapZoom = 3;        // Domyślnie 3000 (indeks 3)
   float currentMapRange = 3000.0f;
+
+  // Klawisze skrótów (kody ASCII lub VK_)
+  int key_ZoomIn = 0xBE;      // '.' (VK_OEM_PERIOD)
+  int key_ZoomOut = 0xBC;     // ',' (VK_OEM_COMMA)
+  int key_Legend = 0xBF;      // '/' (VK_OEM_2)
+  int key_NpcSearch = 0xDC;   // '\' (VK_OEM_5)
 
   // ========================================================================
   // NAVIGATION SYSTEM
@@ -55,6 +62,17 @@ namespace GOTHIC_ENGINE {
   zCView* pNavMenu = nullptr;           // Widok menu nawigacji
   bool navTypingMode = false;           // Czy jesteśmy w trybie wpisywania
   DWORD navLastInputTime = 0;           // Czas ostatniego inputu
+
+  // ========================================================================
+  // LEGEND & COMPASS
+  // ========================================================================
+  bool showLegend = false;              // Czy pokazać legendę
+  zCView* pLegend = nullptr;            // Widok legendy
+  DWORD legendLastInputTime = 0;        // Czas ostatniego inputu legendy
+
+  // Debug - wyświetlanie koordynatów
+  bool showCoordinates = false;
+  DWORD coordsLastInputTime = 0;
 
   // Flush all key states (Windows API)
   void FlushKeys() {
@@ -84,7 +102,30 @@ namespace GOTHIC_ENGINE {
       opt_ShowItemNames = zoptions->ReadInt("QUESTHELPER_V2", "ShowItemNames", 0);
       opt_ShowPlantNames = zoptions->ReadInt("QUESTHELPER_V2", "ShowPlantNames", 0);
       opt_RotateMap = zoptions->ReadInt("QUESTHELPER_V2", "RotateMap", 1);
+      opt_ShowCompass = zoptions->ReadInt("QUESTHELPER_V2", "ShowCompass", 1);
       opt_MapZoom = zoptions->ReadInt("QUESTHELPER_V2", "MapZoom", 3);
+
+      // Klawisze skrótów - menu zapisuje indeks, konwertujemy na VK code
+      // Dostępne klawisze (20 opcji): . , ; ' [ ] - = / F1 F2 F3 F4 F5 F6 NUM+ NUM- NUM* PGUP PGDN
+      // VK codes: 0xBE 0xBC 0xBA 0xDE 0xDB 0xDD 0xBD 0xBB 0xBF 0x70 0x71 0x72 0x73 0x74 0x75 0x6B 0x6D 0x6A 0x21 0x22
+      // ZoomIn:    ".|,|;|'|[|]|-|=|/|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
+      // ZoomOut:   ",|.|;|'|[|]|-|=|/|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
+      // Legend:    "/|.|,|;|'|[|]|-|=|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
+      // NpcSearch: "\|/|.|,|;|'|[|]|-|=|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
+      const int vkZoomIn[]    = { 0xBE, 0xBC, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0xBF, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
+      const int vkZoomOut[]   = { 0xBC, 0xBE, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0xBF, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
+      const int vkLegend[]    = { 0xBF, 0xBE, 0xBC, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
+      const int vkNpcSearch[] = { 0xDC, 0xBF, 0xBE, 0xBC, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
+
+      int idxZoomIn = zoptions->ReadInt("QUESTHELPER_V2", "KeyZoomIn", 0);
+      int idxZoomOut = zoptions->ReadInt("QUESTHELPER_V2", "KeyZoomOut", 0);
+      int idxLegend = zoptions->ReadInt("QUESTHELPER_V2", "KeyLegend", 0);
+      int idxNpcSearch = zoptions->ReadInt("QUESTHELPER_V2", "KeyNpcSearch", 0);
+
+      key_ZoomIn = (idxZoomIn >= 0 && idxZoomIn <= 19) ? vkZoomIn[idxZoomIn] : 0xBE;
+      key_ZoomOut = (idxZoomOut >= 0 && idxZoomOut <= 19) ? vkZoomOut[idxZoomOut] : 0xBC;
+      key_Legend = (idxLegend >= 0 && idxLegend <= 19) ? vkLegend[idxLegend] : 0xBF;
+      key_NpcSearch = (idxNpcSearch >= 0 && idxNpcSearch <= 20) ? vkNpcSearch[idxNpcSearch] : 0xDC;
 
       // NpcNameRange - menu zapisuje indeks (0-4), konwertuj na wartość
       int rangeIndex = zoptions->ReadInt("QUESTHELPER_V2", "NpcNameRange", 0); // domyślnie 0 = 1000
@@ -106,14 +147,13 @@ namespace GOTHIC_ENGINE {
 
   // Obsługa klawiszy zoom (wywoływana w Game_Loop)
   void HandleZoomKeys() {
-      if (!zinput || !zoptions) return;
+      if (!zoptions) return;
 
       static bool keyPressed = false;
 
-      // Klawisz ; (średnik) - oddal (zwiększ zasięg)
-      // Klawisz ' (apostrof) - przybliż (zmniejsz zasięg)
-      bool zoomOut = zinput->KeyPressed(KEY_SEMICOLON) || zinput->KeyPressed(KEY_COMMA);
-      bool zoomIn = zinput->KeyPressed(KEY_APOSTROPHE) || zinput->KeyPressed(KEY_PERIOD);
+      // Używa konfigurowalnych klawiszy z INI
+      bool zoomOut = (GetAsyncKeyState(key_ZoomOut) & 0x8000) != 0;
+      bool zoomIn = (GetAsyncKeyState(key_ZoomIn) & 0x8000) != 0;
 
       if ((zoomIn || zoomOut) && !keyPressed) {
           keyPressed = true;
@@ -226,6 +266,163 @@ namespace GOTHIC_ENGINE {
       }
 
       return false;
+  }
+
+  // ========================================================================
+  // COMPASS & LEGEND FUNCTIONS
+  // ========================================================================
+
+  // Rysuje kompas NA RAMCE minimapy (w koordynatach ekranu)
+  void DrawCompass(float mapRotation) {
+      if (!screen || !opt_ShowCompass) return;
+
+      // Środek minimapy w koordynatach ekranu
+      int centerX = MAP_X + MAP_SIZE / 2;  // 7250
+      int centerY = MAP_Y + MAP_SIZE / 2;  // 950
+
+      // Promień kompasu - na zewnątrz ramki
+      int compassRadius = MAP_SIZE / 2 + 80;  // Trochę poza ramką
+
+      // Kierunki: N, E, S, W
+      float angles[4] = { 0.0f, (float)M_PI/2, (float)M_PI, (float)(-M_PI/2) };
+      const char* letters[4] = { "N", "E", "S", "W" };
+      zCOLOR colors[4] = {
+          zCOLOR(255, 80, 80),   // N - czerwony
+          zCOLOR(220, 220, 220), // E - jasny szary
+          zCOLOR(220, 220, 220), // S - jasny szary
+          zCOLOR(220, 220, 220)  // W - jasny szary
+      };
+
+      // Mała czcionka dla kompasu
+      screen->SetFont("FONT_OLD_10_WHITE.TGA");
+
+      for (int i = 0; i < 4; i++) {
+          float angle = angles[i] + mapRotation;
+          int px = centerX + (int)(compassRadius * sin(angle));
+          int py = centerY - (int)(compassRadius * cos(angle));
+
+          // Korekta pozycji dla centrowania liter
+          px -= 30;  // Przesunięcie w lewo (połowa szerokości litery)
+          py -= 40;  // Przesunięcie w górę
+
+          screen->SetFontColor(colors[i]);
+          screen->Print(px, py, letters[i]);
+      }
+  }
+
+  // Rysuje legendę kolorów
+  void DrawLegend() {
+      if (!showLegend) {
+          if (pLegend) {
+              screen->RemoveItem(pLegend);
+              delete pLegend;
+              pLegend = nullptr;
+          }
+          return;
+      }
+
+      // Utwórz widok legendy jeśli nie istnieje
+      if (!pLegend) {
+          pLegend = new zCView(500, 1500, 3500, 6500);
+          pLegend->InsertBack("DEFAULT.TGA");
+          pLegend->SetColor(zCOLOR(0, 0, 0, 230));
+          pLegend->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
+          pLegend->SetTransparency(230);
+          screen->InsertItem(pLegend);
+      }
+
+      pLegend->ClrPrintwin();
+      pLegend->SetFont("FONT_Default.tga");
+
+      // Tytuł
+      pLegend->SetFontColor(zCOLOR(255, 255, 0));
+      pLegend->Print(100, 200, "=== LEGENDA MINIMAPY ===");
+
+      int yPos = 800;
+      int step = 450;
+
+      // Lista kolorów i opisów
+      struct LegendItem { zCOLOR color; const char* desc; };
+      LegendItem items[] = {
+          { zCOLOR(255, 255, 0),   "Gracz (strzalka)" },
+          { zCOLOR(255, 0, 0),     "Wrogowie" },
+          { zCOLOR(255, 128, 0),   "Wazny NPC" },
+          { zCOLOR(255, 255, 255), "Neutralny NPC" },
+          { zCOLOR(100, 150, 255), "Przedmioty" },
+          { zCOLOR(0, 200, 50),    "Rosliny / Ziola" },
+          { zCOLOR(0, 255, 0),     "Otwarta skrzynia" },
+          { zCOLOR(255, 255, 0),   "Skrzynia na wytrych" },
+          { zCOLOR(0, 255, 255),   "Skrzynia na klucz" },
+          { zCOLOR(255, 200, 0),   "Cel nawigacji" }
+      };
+
+      for (int i = 0; i < 10; i++) {
+          // Kolorowa kropka
+          pLegend->SetFontColor(items[i].color);
+          pLegend->Print(150, yPos, "o");
+
+          // Opis
+          pLegend->SetFontColor(zCOLOR(220, 220, 220));
+          pLegend->Print(400, yPos, items[i].desc);
+
+          yPos += step;
+      }
+
+      // Instrukcja zamknięcia
+      pLegend->SetFontColor(zCOLOR(150, 150, 150));
+      pLegend->Print(100, 7200, "Nacisnij / aby zamknac");
+  }
+
+  // Obsługa klawisza legendy
+  void HandleLegendKey() {
+      DWORD currentTime = GetTickCount();
+
+      // Używa konfigurowalnego klawisza z INI (domyślnie '/')
+      if (GetAsyncKeyState(key_Legend) & 0x8000) {
+          if (currentTime - legendLastInputTime > 300) {
+              showLegend = !showLegend;
+              legendLastInputTime = currentTime;
+          }
+      }
+  }
+
+  // Wyświetla koordynaty gracza na ekranie (debug)
+  void DrawCoordinates() {
+      if (!showCoordinates || !player || !screen) return;
+
+      zVEC3 pos = player->GetPositionWorld();
+
+      // Wyświetl koordynaty w lewym górnym rogu
+      zSTRING coordText = "Pozycja gracza:";
+      zSTRING xText = "X: "; xText += Z (int)pos[0];
+      zSTRING yText = "Y: "; yText += Z (int)pos[1];
+      zSTRING zText = "Z: "; zText += Z (int)pos[2];
+
+      screen->SetFont("FONT_OLD_20_WHITE_HI.TGA");
+      screen->SetFontColor(zCOLOR(255, 255, 0));
+      screen->Print(200, 400, coordText);
+      screen->SetFontColor(zCOLOR(255, 255, 255));
+      screen->Print(200, 650, xText);
+      screen->Print(200, 900, yText);
+      screen->Print(200, 1150, zText);
+
+      // Instrukcja
+      screen->SetFontColor(zCOLOR(150, 150, 150));
+      screen->Print(200, 1500, "Klawisz P = wylacz");
+      screen->Print(200, 1750, "Zapisz X i Z w rogach mapy!");
+  }
+
+  // Obsługa klawisza koordynatów
+  void HandleCoordsKey() {
+      DWORD currentTime = GetTickCount();
+
+      // Klawisz P - toggle koordynatów (debug)
+      if (GetAsyncKeyState('P') & 0x8000) {
+          if (currentTime - coordsLastInputTime > 300) {
+              showCoordinates = !showCoordinates;
+              coordsLastInputTime = currentTime;
+          }
+      }
   }
 
   // ========================================================================
@@ -394,8 +591,8 @@ namespace GOTHIC_ENGINE {
 
       DWORD currentTime = GetTickCount();
 
-      // Klawisz ] - otwórz/zamknij menu nawigacji (VK_OEM_6 = ])
-      if (GetAsyncKeyState(VK_OEM_6) & 0x8000) {
+      // Używa konfigurowalnego klawisza z INI (domyślnie '\')
+      if (GetAsyncKeyState(key_NpcSearch) & 0x8000) {
           if (currentTime - navLastInputTime > 300) {
               if (!showNavMenu) OpenNavMenu();
               else CloseNavMenu();
@@ -682,13 +879,17 @@ namespace GOTHIC_ENGINE {
       // Setup Views with textures to ensure visibility
       if (!pMinimap) {
           pMinimap = new zCView(MAP_X, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + MAP_SIZE);
-          pMinimap->InsertBack("DIA_HIGHL.TGA"); // Standard dialog texture (semi-transparent)
+
+          // Kamienna tekstura tła minimapy
+          pMinimap->InsertBack("DIA_HIGHL.TGA");
+
           pMinimap->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
-          pMinimap->SetTransparency(150); // Ensure alpha
+          pMinimap->SetTransparency(150);
           screen->InsertItem(pMinimap);
 
-          int bThick = 25; // Slightly thicker
-          
+          // Ramki dekoracyjne
+          int bThick = 25;
+
           pBorderTop = new zCView(MAP_X, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + bThick);
           pBorderTop->InsertBack("Default.tga"); pBorderTop->SetColor(zCOLOR(255, 255, 255, 255));
           screen->InsertItem(pBorderTop);
@@ -911,6 +1112,9 @@ namespace GOTHIC_ENGINE {
 
           // Rysuj linię nawigacyjną do celu (przed strzałką gracza)
           DrawNavLine(pMinimap, centerX, centerY, scale, mapRotation);
+
+          // Rysuj kompas na obramowaniu
+          DrawCompass(mapRotation);
       }
 
       // Strzałka gracza z tekstury O.TGA - na wierzchu wszystkich elementów
@@ -938,11 +1142,15 @@ namespace GOTHIC_ENGINE {
       if (!ogame || !player || !screen) return;
 
       LoadOptions();
-      HandleZoomKeys();  // Obsługa klawiszy zoom: ; (oddal) i ' (przybliż)
-      HandleNavKeys();   // Obsługa klawiszy nawigacji: ] (otwórz menu)
+      HandleZoomKeys();   // Obsługa klawiszy zoom: ; (oddal) i ' (przybliż)
+      HandleNavKeys();    // Obsługa klawiszy nawigacji: ] (otwórz menu)
+      HandleLegendKey();  // Obsługa klawisza legendy: /
+      HandleCoordsKey();  // Obsługa klawisza koordynatów: \ (debug)
 
       DrawMinimap();
-      DrawNavMenu();     // Rysowanie menu wyboru NPC (jeśli otwarte)
+      DrawNavMenu();      // Rysowanie menu wyboru NPC (jeśli otwarte)
+      DrawLegend();       // Rysowanie legendy (jeśli włączona)
+      DrawCoordinates();  // Wyświetlanie koordynatów (debug)
   }
 
   TSaveLoadGameInfo& SaveLoadGameInfo = UnionCore::SaveLoadGameInfo;
