@@ -1,6 +1,6 @@
 # Gothic 1 & 2 Union Plugin: Tieru Minimap
 
-![Gothic](https://img.shields.io/badge/Game-Gothic%201%20%26%202-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.1-orange)
+![Gothic](https://img.shields.io/badge/Game-Gothic%201%20%26%202-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.2-orange)
 
 ## 📖 Opis / Description
 
@@ -22,16 +22,18 @@
 |:---:|:---:|:---:|
 | ![Minimap Settings](screenshot.png) | ![NPC Navigation Menu](screenshot2.png) | ![Navigation Line](screenshot3.png) |
 
-| Skróty klawiszowe | Legenda kolorów |
-|:---:|:---:|
-| ![Keybindings](skroty.png) | ![Color Legend](legenda.png) |
+| Skróty klawiszowe | Legenda kolorów | Podgląd VDF |
+|:---:|:---:|:---:|
+| ![Keybindings](skroty.png) | ![Color Legend](legenda.png) | ![VDF Preview](vdf_preview.png) |
 
 ## 🌟 Funkcje / Features
 
 ### Minimapa / Minimap
+*   **Kształt mapy** - Wybierz między kwadratową (z teksturą) a okrągłą (kompas) mapą
 *   **Rotacja mapy** - Mapa obraca się zgodnie z kierunkiem postaci (domyślnie włączone)
-*   **Zoom klawiszami** - Przybliżaj (`.` lub `'`) i oddalaj (`,` lub `;`) mapę w czasie gry
+*   **Zoom klawiszami** - Przybliżaj (`.`) i oddalaj (`,`) mapę w czasie gry (zakres 500-4000)
 *   **Strzałka gracza** - Wyraźny wskaźnik pozycji i kierunku gracza (tekstura O.TGA)
+*   **Nowa tekstura** - Kamienna tekstura dla kwadratowej mapy (TIERUMENU.TGA)
 
 ### Nawigacja do NPC / NPC Navigation (v3.0)
 *   **Menu wyboru NPC** - Lista wszystkich NPC w grze z wyszukiwaniem
@@ -70,7 +72,8 @@ Menu dostępne przez: `Opcje → Union → Tieru Plugins → Ustawienia Minimapy
 | Pokaż Nazwy Roślin | Nazwy roślin i ziół | Plant names |
 | Obracanie Mapy | Mapa obraca się z postacią | Map rotates with character |
 | Zasięg Nazw NPC | Dystans wyświetlania nazw (1000-3500) | Name display range |
-| Zoom Mapy | Przybliżenie mapy (1500-4000) | Map zoom level |
+| Zoom Mapy | Przybliżenie mapy (500-4000) | Map zoom level |
+| Kształt Mapy | Kwadratowa/Okrągła | Square/Circular map |
 
 ## ⌨️ Skróty klawiszowe / Keyboard Shortcuts
 
@@ -82,15 +85,15 @@ Ustaw własne klawisze w menu: `Opcje → Union → Tieru Plugins → Skroty kla
 | Przybliż mapę / Zoom in | `.` | `.` |
 | Oddal mapę / Zoom out | `,` | `,` |
 | Legenda / Legend | `/` | `/` |
-| Szukaj NPC / Search NPC | `\` | `\` |
+| Szukaj NPC / Search NPC | `P` | `P` |
 
 **Dostępne klawisze / Available keys:**
-`. , ; ' [ ] - = / \ F1 F2 F3 F4 F5 F6 NUM+ NUM- NUM* PGUP PGDN`
+`A-Z, 0-9, F1-F12, . , ; ' [ ] - = / \ NUM0-9 NUM+ NUM- NUM* PGUP PGDN TAB SPACE`
 
 ### Nawigacja do NPC / NPC Navigation (v3.0)
 | Klawisz | Akcja (PL) | Action (EN) |
 |---------|------------|-------------|
-| `\` (domyślnie) | Otwórz/zamknij menu nawigacji | Open/close navigation menu |
+| `P` (domyślnie) | Otwórz/zamknij menu nawigacji | Open/close navigation menu |
 | `F` | Włącz tryb wyszukiwania | Enable search mode |
 | `↑` `↓` | Wybierz NPC z listy | Select NPC from list |
 | `Page Up/Down` | Przewiń listę (10 pozycji) | Scroll list (10 items) |
@@ -153,6 +156,15 @@ MapZoom=3
 ```
 
 ## 📝 Historia zmian / Changelog
+
+### v3.2 (2025-12-27)
+- ✨ **System bindowania klawiszy** - Przypisz dowolny klawisz do funkcji
+- ✨ **Nowa tekstura mapy** - Ładniejsza kamienna tekstura dla kwadratowej mapy
+- ✨ **Okrągła mapa** - Możliwość zmiany kształtu mapy na okrągły (kompas)
+- ✨ **Bliższy zoom** - Dodano wartości 500 i 1000 dla większego przybliżenia
+- ✨ **Legenda klawiszy** - Wszystkie bindy opisane w legendzie (domyślnie `/`)
+- 🔧 Domyślny klawisz wyszukiwania NPC zmieniony na `P`
+- 🔧 Poprawiono zapisywanie bindów między sesjami gry
 
 ### v3.1 (2025-12-25)
 - ✨ **Wsparcie dla Gothic 1** - Jeden DLL dla G1, G1A, G2, G2A!

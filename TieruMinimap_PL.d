@@ -544,6 +544,37 @@ instance MenuItem_MM_OPT_ShowCompass_Choice(C_MENU_ITEM_DEF)
   text[0]               = "Wyl|Wl";
 };
 
+// --- Use World Map ---
+instance MenuItem_MM_OPT_UseWorldMap(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 14);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Tekstura Mapy Swiata";
+  text[1]        = "Wyswietla teksture mapy zamiast kamiennego tla";
+};
+
+instance MenuItem_MM_OPT_UseWorldMap_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 14) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "UseWorldMap";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "Wyl|Wl";
+};
+
 // ================================================================================================
 // POZIOM 3: SKRÓTY KLAWISZOWE
 // ================================================================================================

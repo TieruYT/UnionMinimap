@@ -478,7 +478,7 @@ instance MenuItem_MM_OPT_MapZoom(C_MENU_ITEM_DEF)
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
   text[0]        = "Map Zoom";
-  text[1]        = "Map zoom level (keys ; and ')";
+  text[1]        = "Map zoom level";
 };
 
 instance MenuItem_MM_OPT_MapZoom_Choice(C_MENU_ITEM_DEF)
@@ -496,4 +496,132 @@ instance MenuItem_MM_OPT_MapZoom_Choice(C_MENU_ITEM_DEF)
   onchgsetoption        = "MapZoom";
   onchgsetoptionsection = "QUESTHELPER_V2";
   text[0]               = "1500|2000|2500|3000|3500|4000";
+};
+
+// ================================================================================================
+// KEY BINDINGS - "Press any key to assign"
+// ================================================================================================
+
+// --- Key: Zoom In ---
+instance MenuItem_MM_OPT_KeyZoomIn(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 13);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Key: Zoom In";
+  text[1]        = "Select Assign and press any key";
+};
+
+instance MenuItem_MM_OPT_KeyZoomIn_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 13) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyBindZoomIn";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "-|Assign";
+};
+
+// --- Key: Zoom Out ---
+instance MenuItem_MM_OPT_KeyZoomOut(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 14);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Key: Zoom Out";
+  text[1]        = "Select Assign and press any key";
+};
+
+instance MenuItem_MM_OPT_KeyZoomOut_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 14) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyBindZoomOut";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "-|Assign";
+};
+
+// --- Key: Legend ---
+instance MenuItem_MM_OPT_KeyLegend(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 15);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Key: Legend";
+  text[1]        = "Select Assign and press any key";
+};
+
+instance MenuItem_MM_OPT_KeyLegend_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 15) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyBindLegend";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "-|Assign";
+};
+
+// --- Key: NPC Search ---
+instance MenuItem_MM_OPT_KeyNpcSearch(C_MENU_ITEM_DEF)
+{
+  backpic        = "";
+  posx           = Text_PX;
+  posy           = Start_PY + (Menu_DY * 16);
+  dimx           = Text_SX;
+  dimy           = Text_SY;
+  flags          = flags | IT_EFFECTS_NEXT;
+  onselaction[0] = SEL_ACTION_UNDEF;
+  text[0]        = "Key: NPC Search";
+  text[1]        = "Select Assign and press any key";
+};
+
+instance MenuItem_MM_OPT_KeyNpcSearch_Choice(C_MENU_ITEM_DEF)
+{
+  backpic  = "MENU_CHOICE_BACK.TGA";
+  type     = MENU_ITEM_CHOICEBOX;
+  fontname = "font_old_10_white.tga";
+  posx     = Choice_PX;
+  posy     = Start_PY + (Menu_DY * 16) + Choice_DY;
+  dimx     = Choice_SX;
+  dimy     = Choice_SY;
+  flags    = flags & ~IT_SELECTABLE;
+  flags    = flags | IT_TXT_CENTER;
+
+  onchgsetoption        = "KeyBindNpcSearch";
+  onchgsetoptionsection = "QUESTHELPER_V2";
+  text[0]               = "-|Assign";
 };

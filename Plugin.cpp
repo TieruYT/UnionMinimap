@@ -20,12 +20,13 @@ namespace GOTHIC_ENGINE {
   zCView* pBorderBottom = nullptr;
   zCView* pBorderLeft = nullptr;
   zCView* pBorderRight = nullptr;
+  zCView* pCircularBorder = nullptr;  // Okrągła ramka minimapy
   zCView* pPlayerArrow = nullptr;  // Strzałka gracza z tekstury O.TGA
 
-  const int MAP_SIZE = 1500;   
-  const int MAP_X = 6500;      
-  const int MAP_Y = 200;       
-  const float MAP_RANGE = 3000.0f; 
+  const int MAP_SIZE = 1500;
+  const int MAP_X = 6500;
+  const int MAP_Y = 200;
+  const float MAP_RANGE = 3000.0f;
 
   int opt_ShowMinimap = 0; // Default OFF to test if menu enables it
   int opt_ShowChests = 1;
@@ -40,16 +41,18 @@ namespace GOTHIC_ENGINE {
   int opt_RotateMap = 1;      // Obracaj mapę zgodnie z kierunkiem gracza (domyślnie włączone)
   int opt_NpcNameRange = 500; // Zasięg wyświetlania nazw NPC (w jednostkach gry, ~100 = 1m)
   int opt_ShowCompass = 1;    // Pokaż kompas (N/S/E/W) na ramce minimapy
+  int opt_CircularMap = 0;    // 0 = kwadratowa, 1 = okrągła minimapa
+  int opt_ShowMapTexture = 1; // Pokaż teksturę tła mapy (domyślnie wł. dla kwadratu, wył. dla okręgu)
 
   // Zoom mapy - wartości: 0=1500, 1=2000, 2=2500, 3=3000, 4=3500, 5=4000
   int opt_MapZoom = 3;        // Domyślnie 3000 (indeks 3)
   float currentMapRange = 3000.0f;
 
-  // Klawisze skrótów (kody ASCII lub VK_)
+  // Klawisze skrótów (kody VK_ wczytywane z INI)
   int key_ZoomIn = 0xBE;      // '.' (VK_OEM_PERIOD)
   int key_ZoomOut = 0xBC;     // ',' (VK_OEM_COMMA)
   int key_Legend = 0xBF;      // '/' (VK_OEM_2)
-  int key_NpcSearch = 0xDC;   // '\' (VK_OEM_5)
+  int key_NpcSearch = 0x50;   // 'P'
 
   // ========================================================================
   // NAVIGATION SYSTEM
@@ -64,15 +67,19 @@ namespace GOTHIC_ENGINE {
   DWORD navLastInputTime = 0;           // Czas ostatniego inputu
 
   // ========================================================================
+  // KEY BINDING SYSTEM - "Press any key to assign"
+  // ========================================================================
+  int keyBindMode = 0;                  // 0=off, 1=ZoomIn, 2=ZoomOut, 3=Legend, 4=NpcSearch
+  zCView* pKeyBindOverlay = nullptr;    // Overlay "Press any key..."
+  DWORD keyBindStartTime = 0;           // Czas rozpoczęcia trybu bindowania
+  const DWORD KEY_BIND_TIMEOUT = 10000; // Timeout 10 sekund
+
+  // ========================================================================
   // LEGEND & COMPASS
   // ========================================================================
   bool showLegend = false;              // Czy pokazać legendę
   zCView* pLegend = nullptr;            // Widok legendy
   DWORD legendLastInputTime = 0;        // Czas ostatniego inputu legendy
-
-  // Debug - wyświetlanie koordynatów
-  bool showCoordinates = false;
-  DWORD coordsLastInputTime = 0;
 
   // Flush all key states (Windows API)
   void FlushKeys() {
@@ -86,6 +93,398 @@ namespace GOTHIC_ENGINE {
   std::string ToStdString(const zSTRING& s) {
       if (s.IsEmpty()) return "";
       return std::string(s.ToChar());
+  }
+
+  // Zwraca pełną ścieżkę do pliku INI gry (sprawdza różne nazwy)
+  zSTRING GetGameIniPath() {
+      zSTRING basePath = zoptions->GetDirString(DIR_SYSTEM);
+
+      // Upewnij się że ścieżka kończy się backslashem
+      int len = basePath.Length();
+      if (len > 0) {
+          char lastChar = basePath.ToChar()[len - 1];
+          if (lastChar != '\\' && lastChar != '/') {
+              basePath = basePath + zSTRING("\\");
+          }
+      }
+
+      // Lista możliwych nazw pliku INI
+      const char* iniNames[] = { "Gothic.ini", "Gothic2.ini", "GOTHIC.INI", "gothic.ini" };
+
+      for (int i = 0; i < 4; i++) {
+          zSTRING path = basePath + zSTRING(iniNames[i]);
+          if (GetFileAttributesA(path.ToChar()) != INVALID_FILE_ATTRIBUTES) {
+              return path;
+          }
+      }
+
+      // Fallback
+      return basePath + zSTRING("Gothic.ini");
+  }
+
+  // Sprawdza czy punkt (x, y) jest wewnątrz okręgu minimapy
+  // centerX, centerY = środek (4096, 4096), radius = promień (4096)
+  bool IsInCircularBounds(int x, int y, int centerX, int centerY, int radius) {
+      int dx = x - centerX;
+      int dy = y - centerY;
+      return (dx * dx + dy * dy) <= (radius * radius);
+  }
+
+  // ========================================================================
+  // KEY NAME PARSER - parsuje nazwę klawisza na kod VK
+  // ========================================================================
+  // Obsługiwane formaty: "F1"-"F12", "A"-"Z", "0"-"9", "NUMPAD0"-"NUMPAD9",
+  // "PERIOD", "COMMA", "SLASH", "BACKSLASH", "MINUS", "PLUS", "TAB", "SPACE",
+  // "INSERT", "DELETE", "HOME", "END", "PAGEUP", "PAGEDOWN", etc.
+
+  int ParseKeyName(const std::string& keyName) {
+      if (keyName.empty()) return 0;
+
+      // Konwertuj na uppercase
+      std::string key = keyName;
+      for (auto& c : key) c = toupper(c);
+
+      // Pojedyncze litery A-Z
+      if (key.length() == 1 && key[0] >= 'A' && key[0] <= 'Z') {
+          return key[0];  // VK_A = 0x41 = 'A'
+      }
+
+      // Pojedyncze cyfry 0-9
+      if (key.length() == 1 && key[0] >= '0' && key[0] <= '9') {
+          return key[0];  // VK_0 = 0x30 = '0'
+      }
+
+      // Klawisze funkcyjne F1-F12
+      if (key[0] == 'F' && key.length() >= 2 && key.length() <= 3) {
+          int fNum = atoi(key.c_str() + 1);
+          if (fNum >= 1 && fNum <= 12) return 0x6F + fNum;  // VK_F1 = 0x70
+      }
+
+      // Numpad 0-9
+      if (key.substr(0, 6) == "NUMPAD" && key.length() == 7) {
+          int num = key[6] - '0';
+          if (num >= 0 && num <= 9) return 0x60 + num;  // VK_NUMPAD0 = 0x60
+      }
+
+      // Numpad operatory
+      if (key == "NUMPADMUL" || key == "MULTIPLY") return 0x6A;  // VK_MULTIPLY
+      if (key == "NUMPADADD" || key == "ADD") return 0x6B;       // VK_ADD
+      if (key == "NUMPADSUB" || key == "SUBTRACT") return 0x6D;  // VK_SUBTRACT
+      if (key == "NUMPADDEC" || key == "DECIMAL") return 0x6E;   // VK_DECIMAL
+      if (key == "NUMPADDIV" || key == "DIVIDE") return 0x6F;    // VK_DIVIDE
+
+      // Klawisze specjalne
+      if (key == "SPACE" || key == "SPACEBAR") return VK_SPACE;
+      if (key == "TAB") return VK_TAB;
+      if (key == "ENTER" || key == "RETURN") return VK_RETURN;
+      if (key == "ESCAPE" || key == "ESC") return VK_ESCAPE;
+      if (key == "BACKSPACE" || key == "BACK") return VK_BACK;
+
+      if (key == "INSERT" || key == "INS") return VK_INSERT;
+      if (key == "DELETE" || key == "DEL") return VK_DELETE;
+      if (key == "HOME") return VK_HOME;
+      if (key == "END") return VK_END;
+      if (key == "PAGEUP" || key == "PGUP" || key == "PRIOR") return VK_PRIOR;
+      if (key == "PAGEDOWN" || key == "PGDN" || key == "NEXT") return VK_NEXT;
+
+      if (key == "UP" || key == "ARROWUP") return VK_UP;
+      if (key == "DOWN" || key == "ARROWDOWN") return VK_DOWN;
+      if (key == "LEFT" || key == "ARROWLEFT") return VK_LEFT;
+      if (key == "RIGHT" || key == "ARROWRIGHT") return VK_RIGHT;
+
+      // Klawisze OEM (znaki specjalne)
+      if (key == "PERIOD" || key == "DOT" || key == ".") return 0xBE;      // VK_OEM_PERIOD
+      if (key == "COMMA" || key == ",") return 0xBC;                        // VK_OEM_COMMA
+      if (key == "SLASH" || key == "/") return 0xBF;                        // VK_OEM_2
+      if (key == "BACKSLASH" || key == "\\") return 0xDC;                   // VK_OEM_5
+      if (key == "MINUS" || key == "-") return 0xBD;                        // VK_OEM_MINUS
+      if (key == "PLUS" || key == "EQUALS" || key == "=") return 0xBB;      // VK_OEM_PLUS
+      if (key == "SEMICOLON" || key == ";") return 0xBA;                    // VK_OEM_1
+      if (key == "QUOTE" || key == "APOSTROPHE" || key == "'") return 0xDE; // VK_OEM_7
+      if (key == "LBRACKET" || key == "[") return 0xDB;                     // VK_OEM_4
+      if (key == "RBRACKET" || key == "]") return 0xDD;                     // VK_OEM_6
+      if (key == "TILDE" || key == "GRAVE" || key == "`") return 0xC0;      // VK_OEM_3
+
+      // Domyślne kody hex (np. "0xBE" lub "190")
+      if (key.substr(0, 2) == "0X") {
+          return strtol(key.c_str(), nullptr, 16);
+      }
+      if (key[0] >= '0' && key[0] <= '9') {
+          return atoi(key.c_str());
+      }
+
+      return 0;  // Nieznany klawisz
+  }
+
+  // Konwertuje kod VK na nazwę (do zapisu w INI)
+  std::string KeyCodeToName(int vk) {
+      if (vk >= 'A' && vk <= 'Z') return std::string(1, (char)vk);
+      if (vk >= '0' && vk <= '9') return std::string(1, (char)vk);
+      if (vk >= 0x70 && vk <= 0x7B) return "F" + std::to_string(vk - 0x6F);
+      if (vk >= 0x60 && vk <= 0x69) return "NUMPAD" + std::to_string(vk - 0x60);
+
+      switch (vk) {
+          case 0xBE: return "PERIOD";
+          case 0xBC: return "COMMA";
+          case 0xBF: return "SLASH";
+          case 0xDC: return "BACKSLASH";
+          case 0xBD: return "MINUS";
+          case 0xBB: return "PLUS";
+          case 0xBA: return "SEMICOLON";
+          case 0xDE: return "QUOTE";
+          case 0xDB: return "LBRACKET";
+          case 0xDD: return "RBRACKET";
+          case 0x6A: return "MULTIPLY";
+          case 0x6B: return "ADD";
+          case 0x6D: return "SUBTRACT";
+          case VK_SPACE: return "SPACE";
+          case VK_TAB: return "TAB";
+          case VK_RETURN: return "ENTER";
+          case VK_INSERT: return "INSERT";
+          case VK_DELETE: return "DELETE";
+          case VK_HOME: return "HOME";
+          case VK_END: return "END";
+          case VK_PRIOR: return "PAGEUP";
+          case VK_NEXT: return "PAGEDOWN";
+          default: return "0x" + std::to_string(vk);
+      }
+  }
+
+  // Konwertuje kod VK na ładną nazwę do wyświetlania (ze znakami specjalnymi w cudzysłowie)
+  std::string KeyCodeToDisplayName(int vk) {
+      if (vk >= 'A' && vk <= 'Z') return std::string(1, (char)vk);
+      if (vk >= '0' && vk <= '9') return std::string(1, (char)vk);
+      if (vk >= 0x70 && vk <= 0x7B) return "F" + std::to_string(vk - 0x6F);
+      if (vk >= 0x60 && vk <= 0x69) return "Num" + std::to_string(vk - 0x60);
+
+      switch (vk) {
+          case 0xBE: return "\".\"";      // Period
+          case 0xBC: return "\",\"";      // Comma
+          case 0xBF: return "\"/\"";      // Slash
+          case 0xDC: return "\"\\\"";     // Backslash
+          case 0xBD: return "\"-\"";      // Minus
+          case 0xBB: return "\"+\"";      // Plus
+          case 0xBA: return "\";\"";      // Semicolon
+          case 0xDE: return "\"'\"";      // Quote
+          case 0xDB: return "\"[\"";      // Left bracket
+          case 0xDD: return "\"]\"";      // Right bracket
+          case 0x6A: return "Num*";
+          case 0x6B: return "Num+";
+          case 0x6D: return "Num-";
+          case VK_SPACE: return "Space";
+          case VK_TAB: return "Tab";
+          case VK_RETURN: return "Enter";
+          case VK_INSERT: return "Ins";
+          case VK_DELETE: return "Del";
+          case VK_HOME: return "Home";
+          case VK_END: return "End";
+          case VK_PRIOR: return "PgUp";
+          case VK_NEXT: return "PgDn";
+          default: return "?";
+      }
+  }
+
+  // ========================================================================
+  // KEY BINDING FUNCTIONS - "Press any key to assign"
+  // ========================================================================
+
+  // Wykrywa wciśnięty klawisz (skanuje wszystkie VK codes)
+  int DetectPressedKey() {
+      // Pomijamy klawisze systemowe/modyfikujące i nawigacji menu
+      const int skipKeys[] = {
+          VK_LSHIFT, VK_RSHIFT, VK_SHIFT,
+          VK_LCONTROL, VK_RCONTROL, VK_CONTROL,
+          VK_LMENU, VK_RMENU, VK_MENU,  // Alt keys
+          VK_LWIN, VK_RWIN,
+          VK_CAPITAL, VK_NUMLOCK, VK_SCROLL,
+          VK_PAUSE, VK_SNAPSHOT,  // PrintScreen
+          VK_RETURN,  // Enter - używany w menu
+          VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT,  // Strzałki - nawigacja menu
+          VK_LBUTTON, VK_RBUTTON, VK_MBUTTON,  // Przyciski myszy
+          0
+      };
+
+      for (int vk = 1; vk < 256; vk++) {
+          // Sprawdź czy to klawisz do pominięcia
+          bool skip = false;
+          for (int i = 0; skipKeys[i] != 0; i++) {
+              if (vk == skipKeys[i]) { skip = true; break; }
+          }
+          if (skip) continue;
+
+          // Sprawdź czy klawisz jest wciśnięty
+          if (GetAsyncKeyState(vk) & 0x8000) {
+              return vk;
+          }
+      }
+      return 0;  // Żaden klawisz nie wciśnięty
+  }
+
+  // Pobiera nazwę klawisza do wyświetlenia (ładniejsza wersja)
+  const char* GetKeyDisplayName(int bindMode) {
+      switch (bindMode) {
+          case 1: return "Zoom In";
+          case 2: return "Zoom Out";
+          case 3: return "Legend";
+          case 4: return "NPC Search";
+          default: return "Unknown";
+      }
+  }
+
+  // Rysuje overlay "Press any key..."
+  void DrawKeyBindOverlay() {
+      if (keyBindMode == 0) {
+          if (pKeyBindOverlay) {
+              screen->RemoveItem(pKeyBindOverlay);
+              delete pKeyBindOverlay;
+              pKeyBindOverlay = nullptr;
+          }
+          return;
+      }
+
+      // Utwórz overlay jeśli nie istnieje
+      if (!pKeyBindOverlay) {
+          pKeyBindOverlay = new zCView(2000, 3000, 6000, 5000);
+          pKeyBindOverlay->InsertBack("DEFAULT.TGA");
+          pKeyBindOverlay->SetColor(zCOLOR(0, 0, 0, 240));
+          pKeyBindOverlay->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
+          pKeyBindOverlay->SetTransparency(240);
+          screen->InsertItem(pKeyBindOverlay);
+      }
+
+      pKeyBindOverlay->ClrPrintwin();
+      pKeyBindOverlay->SetFont("FONT_Default.tga");
+
+      // Tytuł
+      pKeyBindOverlay->SetFontColor(zCOLOR(255, 255, 0));
+      zSTRING title = "=== ASSIGN KEY: ";
+      title += GetKeyDisplayName(keyBindMode);
+      title += " ===";
+      pKeyBindOverlay->Print(200, 500, title);
+
+      // Instrukcja
+      pKeyBindOverlay->SetFontColor(zCOLOR(255, 255, 255));
+      pKeyBindOverlay->Print(200, 2000, "Press any key to assign...");
+
+      // Timeout info
+      DWORD elapsed = GetTickCount() - keyBindStartTime;
+      int remaining = (KEY_BIND_TIMEOUT - elapsed) / 1000;
+      if (remaining < 0) remaining = 0;
+
+      pKeyBindOverlay->SetFontColor(zCOLOR(150, 150, 150));
+      zSTRING timeoutStr = "Timeout: ";
+      timeoutStr += Z remaining;
+      timeoutStr += "s | ESC = cancel";
+      pKeyBindOverlay->Print(200, 3500, timeoutStr);
+  }
+
+  // Obsługa trybu przypisywania klawiszy
+  void HandleKeyBindMode() {
+      if (keyBindMode == 0) return;
+
+      DWORD elapsed = GetTickCount() - keyBindStartTime;
+
+      // Sprawdź timeout
+      if (elapsed > KEY_BIND_TIMEOUT) {
+          keyBindMode = 0;
+          FlushKeys();
+          return;
+      }
+
+      // Opóźnienie startowe 500ms - daj czas na puszczenie klawiszy menu
+      if (elapsed < 500) {
+          FlushKeys();
+          return;
+      }
+
+      // ESC anuluje
+      if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
+          keyBindMode = 0;
+          FlushKeys();
+          return;
+      }
+
+      // Wykryj wciśnięty klawisz
+      int detectedKey = DetectPressedKey();
+      if (detectedKey != 0 && detectedKey != VK_ESCAPE) {
+          std::string keyName = KeyCodeToName(detectedKey);
+
+          // Zapisz klawisz do odpowiedniej opcji
+          switch (keyBindMode) {
+              case 1:  // ZoomIn
+                  zoptions->WriteString("QUESTHELPER_V2", "KeyZoomIn", keyName.c_str(), TRUE);
+                  key_ZoomIn = detectedKey;
+                  break;
+              case 2:  // ZoomOut
+                  zoptions->WriteString("QUESTHELPER_V2", "KeyZoomOut", keyName.c_str(), TRUE);
+                  key_ZoomOut = detectedKey;
+                  break;
+              case 3:  // Legend
+                  zoptions->WriteString("QUESTHELPER_V2", "KeyLegend", keyName.c_str(), TRUE);
+                  key_Legend = detectedKey;
+                  break;
+              case 4:  // NpcSearch
+                  zoptions->WriteString("QUESTHELPER_V2", "KeyNpcSearch", keyName.c_str(), TRUE);
+                  key_NpcSearch = detectedKey;
+                  break;
+          }
+
+          // Wymuszony zapis do pliku INI (bezpośrednio przez Windows API)
+          zSTRING iniPath = GetGameIniPath();
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyZoomIn", KeyCodeToName(key_ZoomIn).c_str(), iniPath.ToChar());
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyZoomOut", KeyCodeToName(key_ZoomOut).c_str(), iniPath.ToChar());
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyLegend", KeyCodeToName(key_Legend).c_str(), iniPath.ToChar());
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyNpcSearch", KeyCodeToName(key_NpcSearch).c_str(), iniPath.ToChar());
+
+          // Zakończ tryb bindowania
+          keyBindMode = 0;
+          FlushKeys();
+
+          // Dodatkowe opóźnienie aby nowy klawisz nie aktywował funkcji od razu
+          keyBindStartTime = GetTickCount();  // Użyj jako znacznik czasu zakończenia
+      }
+  }
+
+  // Sprawdza czy minęło wystarczająco czasu od ostatniego bindowania
+  bool IsKeyBindCooldownActive() {
+      // 500ms cooldown po zakończeniu bindowania
+      return (GetTickCount() - keyBindStartTime) < 500;
+  }
+
+  // Sprawdza czy menu aktywowało tryb bindowania
+  void CheckKeyBindTrigger() {
+      if (keyBindMode != 0) return;  // Już w trybie bindowania
+
+      // Ścieżka do INI (do resetu)
+      zSTRING iniPath = GetGameIniPath();
+
+      // Czytaj triggery z zoptions (tam menu zapisuje), resetuj w obu miejscach
+      if (zoptions->ReadInt("QUESTHELPER_V2", "KeyBindZoomIn", 0) == 1) {
+          keyBindMode = 1;
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindZoomIn", 0, TRUE);
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindZoomIn", "0", iniPath.ToChar());
+      }
+      else if (zoptions->ReadInt("QUESTHELPER_V2", "KeyBindZoomOut", 0) == 1) {
+          keyBindMode = 2;
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindZoomOut", 0, TRUE);
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindZoomOut", "0", iniPath.ToChar());
+      }
+      else if (zoptions->ReadInt("QUESTHELPER_V2", "KeyBindLegend", 0) == 1) {
+          keyBindMode = 3;
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindLegend", 0, TRUE);
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindLegend", "0", iniPath.ToChar());
+      }
+      else if (zoptions->ReadInt("QUESTHELPER_V2", "KeyBindNpcSearch", 0) == 1) {
+          keyBindMode = 4;
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindNpcSearch", 0, TRUE);
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindNpcSearch", "0", iniPath.ToChar());
+      }
+
+      if (keyBindMode != 0) {
+          keyBindStartTime = GetTickCount();
+          FlushKeys();
+          if (zinput) zinput->ClearKeyBuffer();
+      }
   }
 
   void LoadOptions() {
@@ -103,29 +502,54 @@ namespace GOTHIC_ENGINE {
       opt_ShowPlantNames = zoptions->ReadInt("QUESTHELPER_V2", "ShowPlantNames", 0);
       opt_RotateMap = zoptions->ReadInt("QUESTHELPER_V2", "RotateMap", 1);
       opt_ShowCompass = zoptions->ReadInt("QUESTHELPER_V2", "ShowCompass", 1);
+      opt_CircularMap = zoptions->ReadInt("QUESTHELPER_V2", "CircularMap", 0);
+
+      // Tekstura mapy - domyślnie wł. dla kwadratu, wył. dla okręgu
+      int defaultTexture = opt_CircularMap ? 0 : 1;
+      opt_ShowMapTexture = zoptions->ReadInt("QUESTHELPER_V2", "ShowMapTexture", defaultTexture);
+
       opt_MapZoom = zoptions->ReadInt("QUESTHELPER_V2", "MapZoom", 3);
 
-      // Klawisze skrótów - menu zapisuje indeks, konwertujemy na VK code
-      // Dostępne klawisze (20 opcji): . , ; ' [ ] - = / F1 F2 F3 F4 F5 F6 NUM+ NUM- NUM* PGUP PGDN
-      // VK codes: 0xBE 0xBC 0xBA 0xDE 0xDB 0xDD 0xBD 0xBB 0xBF 0x70 0x71 0x72 0x73 0x74 0x75 0x6B 0x6D 0x6A 0x21 0x22
-      // ZoomIn:    ".|,|;|'|[|]|-|=|/|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
-      // ZoomOut:   ",|.|;|'|[|]|-|=|/|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
-      // Legend:    "/|.|,|;|'|[|]|-|=|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
-      // NpcSearch: "\|/|.|,|;|'|[|]|-|=|F1|F2|F3|F4|F5|F6|NUM+|NUM-|NUM*|PGUP|PGDN"
-      const int vkZoomIn[]    = { 0xBE, 0xBC, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0xBF, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
-      const int vkZoomOut[]   = { 0xBC, 0xBE, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0xBF, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
-      const int vkLegend[]    = { 0xBF, 0xBE, 0xBC, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
-      const int vkNpcSearch[] = { 0xDC, 0xBF, 0xBE, 0xBC, 0xBA, 0xDE, 0xDB, 0xDD, 0xBD, 0xBB, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x6B, 0x6D, 0x6A, 0x21, 0x22 };
+      // ========================================================================
+      // KLAWISZE SKRÓTÓW - czytaj bezpośrednio z pliku INI (nie z cache)
+      // ========================================================================
+      // Obsługiwane: A-Z, 0-9, F1-F12, NUMPAD0-9, PERIOD, COMMA, SLASH, BACKSLASH,
+      //              MINUS, PLUS, SEMICOLON, QUOTE, LBRACKET, RBRACKET, SPACE, TAB,
+      //              INSERT, DELETE, HOME, END, PAGEUP, PAGEDOWN, kody hex (0xBE)
 
-      int idxZoomIn = zoptions->ReadInt("QUESTHELPER_V2", "KeyZoomIn", 0);
-      int idxZoomOut = zoptions->ReadInt("QUESTHELPER_V2", "KeyZoomOut", 0);
-      int idxLegend = zoptions->ReadInt("QUESTHELPER_V2", "KeyLegend", 0);
-      int idxNpcSearch = zoptions->ReadInt("QUESTHELPER_V2", "KeyNpcSearch", 0);
+      // Buduj ścieżkę do pliku INI gry
+      zSTRING iniPath = GetGameIniPath();
 
-      key_ZoomIn = (idxZoomIn >= 0 && idxZoomIn <= 19) ? vkZoomIn[idxZoomIn] : 0xBE;
-      key_ZoomOut = (idxZoomOut >= 0 && idxZoomOut <= 19) ? vkZoomOut[idxZoomOut] : 0xBC;
-      key_Legend = (idxLegend >= 0 && idxLegend <= 19) ? vkLegend[idxLegend] : 0xBF;
-      key_NpcSearch = (idxNpcSearch >= 0 && idxNpcSearch <= 20) ? vkNpcSearch[idxNpcSearch] : 0xDC;
+      // Czytaj bezpośrednio z pliku INI przez Windows API
+      char keyBuffer[64];
+
+      GetPrivateProfileStringA("QUESTHELPER_V2", "KeyZoomIn", "", keyBuffer, sizeof(keyBuffer), iniPath.ToChar());
+      std::string strZoomIn = keyBuffer;
+
+      GetPrivateProfileStringA("QUESTHELPER_V2", "KeyZoomOut", "", keyBuffer, sizeof(keyBuffer), iniPath.ToChar());
+      std::string strZoomOut = keyBuffer;
+
+      GetPrivateProfileStringA("QUESTHELPER_V2", "KeyLegend", "", keyBuffer, sizeof(keyBuffer), iniPath.ToChar());
+      std::string strLegend = keyBuffer;
+
+      GetPrivateProfileStringA("QUESTHELPER_V2", "KeyNpcSearch", "", keyBuffer, sizeof(keyBuffer), iniPath.ToChar());
+      std::string strNpcSearch = keyBuffer;
+
+      int parsedZoomIn = ParseKeyName(strZoomIn);
+      int parsedZoomOut = ParseKeyName(strZoomOut);
+      int parsedLegend = ParseKeyName(strLegend);
+      int parsedNpcSearch = ParseKeyName(strNpcSearch);
+
+      key_ZoomIn = parsedZoomIn ? parsedZoomIn : 0xBE;      // domyślnie '.'
+      key_ZoomOut = parsedZoomOut ? parsedZoomOut : 0xBC;   // domyślnie ','
+      key_Legend = parsedLegend ? parsedLegend : 0xBF;      // domyślnie '/'
+      key_NpcSearch = parsedNpcSearch ? parsedNpcSearch : 0x50; // domyślnie 'P'
+
+      // Zapisz domyślne wartości do INI jeśli puste
+      if (strZoomIn.empty()) WritePrivateProfileStringA("QUESTHELPER_V2", "KeyZoomIn", "PERIOD", iniPath.ToChar());
+      if (strZoomOut.empty()) WritePrivateProfileStringA("QUESTHELPER_V2", "KeyZoomOut", "COMMA", iniPath.ToChar());
+      if (strLegend.empty()) WritePrivateProfileStringA("QUESTHELPER_V2", "KeyLegend", "SLASH", iniPath.ToChar());
+      if (strNpcSearch.empty()) WritePrivateProfileStringA("QUESTHELPER_V2", "KeyNpcSearch", "P", iniPath.ToChar());
 
       // NpcNameRange - menu zapisuje indeks (0-4), konwertuj na wartość
       int rangeIndex = zoptions->ReadInt("QUESTHELPER_V2", "NpcNameRange", 0); // domyślnie 0 = 1000
@@ -136,9 +560,9 @@ namespace GOTHIC_ENGINE {
           opt_NpcNameRange = 1000; // fallback
       }
 
-      // MapZoom - konwertuj indeks na wartość zasięgu
-      const float zoomValues[] = { 1500.0f, 2000.0f, 2500.0f, 3000.0f, 3500.0f, 4000.0f };
-      if (opt_MapZoom >= 0 && opt_MapZoom <= 5) {
+      // MapZoom - konwertuj indeks na wartość zasięgu (0=500, 1=1000, 2=1500, ...)
+      const float zoomValues[] = { 500.0f, 1000.0f, 1500.0f, 2000.0f, 2500.0f, 3000.0f, 3500.0f, 4000.0f };
+      if (opt_MapZoom >= 0 && opt_MapZoom <= 7) {
           currentMapRange = zoomValues[opt_MapZoom];
       } else {
           currentMapRange = 3000.0f;
@@ -148,6 +572,7 @@ namespace GOTHIC_ENGINE {
   // Obsługa klawiszy zoom (wywoływana w Game_Loop)
   void HandleZoomKeys() {
       if (!zoptions) return;
+      if (IsKeyBindCooldownActive()) return;  // Cooldown po bindowaniu
 
       static bool keyPressed = false;
 
@@ -162,12 +587,12 @@ namespace GOTHIC_ENGINE {
               opt_MapZoom--;
               zoptions->WriteInt("QUESTHELPER_V2", "MapZoom", opt_MapZoom, TRUE);
           }
-          else if (zoomOut && opt_MapZoom < 5) {
+          else if (zoomOut && opt_MapZoom < 7) {
               opt_MapZoom++;
               zoptions->WriteInt("QUESTHELPER_V2", "MapZoom", opt_MapZoom, TRUE);
           }
 
-          const float zoomValues[] = { 1500.0f, 2000.0f, 2500.0f, 3000.0f, 3500.0f, 4000.0f };
+          const float zoomValues[] = { 500.0f, 1000.0f, 1500.0f, 2000.0f, 2500.0f, 3000.0f, 3500.0f, 4000.0f };
           currentMapRange = zoomValues[opt_MapZoom];
       }
 
@@ -321,9 +746,9 @@ namespace GOTHIC_ENGINE {
           return;
       }
 
-      // Utwórz widok legendy jeśli nie istnieje
+      // Utwórz widok legendy jeśli nie istnieje (powiększona dla skrótów)
       if (!pLegend) {
-          pLegend = new zCView(500, 1500, 3500, 6500);
+          pLegend = new zCView(500, 800, 3800, 7200);
           pLegend->InsertBack("DEFAULT.TGA");
           pLegend->SetColor(zCOLOR(0, 0, 0, 230));
           pLegend->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
@@ -336,10 +761,10 @@ namespace GOTHIC_ENGINE {
 
       // Tytuł
       pLegend->SetFontColor(zCOLOR(255, 255, 0));
-      pLegend->Print(100, 200, "=== LEGENDA MINIMAPY ===");
+      pLegend->Print(100, 150, "=== LEGENDA MINIMAPY ===");
 
-      int yPos = 800;
-      int step = 450;
+      int yPos = 600;
+      int step = 380;
 
       // Lista kolorów i opisów
       struct LegendItem { zCOLOR color; const char* desc; };
@@ -357,24 +782,44 @@ namespace GOTHIC_ENGINE {
       };
 
       for (int i = 0; i < 10; i++) {
-          // Kolorowa kropka
           pLegend->SetFontColor(items[i].color);
           pLegend->Print(150, yPos, "o");
-
-          // Opis
           pLegend->SetFontColor(zCOLOR(220, 220, 220));
           pLegend->Print(400, yPos, items[i].desc);
-
           yPos += step;
       }
 
+      // Sekcja skrótów klawiszowych
+      yPos += 200;
+      pLegend->SetFontColor(zCOLOR(255, 255, 0));
+      pLegend->Print(100, yPos, "=== SKROTY ===");
+      yPos += 400;
+
+      pLegend->SetFontColor(zCOLOR(180, 180, 180));
+      zSTRING keyLine;
+
+      keyLine = "Zoom +: "; keyLine += KeyCodeToDisplayName(key_ZoomIn).c_str();
+      pLegend->Print(150, yPos, keyLine); yPos += step;
+
+      keyLine = "Zoom -: "; keyLine += KeyCodeToDisplayName(key_ZoomOut).c_str();
+      pLegend->Print(150, yPos, keyLine); yPos += step;
+
+      keyLine = "Legenda: "; keyLine += KeyCodeToDisplayName(key_Legend).c_str();
+      pLegend->Print(150, yPos, keyLine); yPos += step;
+
+      keyLine = "Szukaj NPC: "; keyLine += KeyCodeToDisplayName(key_NpcSearch).c_str();
+      pLegend->Print(150, yPos, keyLine); yPos += step;
+
       // Instrukcja zamknięcia
-      pLegend->SetFontColor(zCOLOR(150, 150, 150));
-      pLegend->Print(100, 7200, "Nacisnij / aby zamknac");
+      pLegend->SetFontColor(zCOLOR(100, 100, 100));
+      keyLine = "("; keyLine += KeyCodeToDisplayName(key_Legend).c_str(); keyLine += " = zamknij)";
+      pLegend->Print(100, 7600, keyLine);
   }
 
   // Obsługa klawisza legendy
   void HandleLegendKey() {
+      if (IsKeyBindCooldownActive()) return;  // Cooldown po bindowaniu
+
       DWORD currentTime = GetTickCount();
 
       // Używa konfigurowalnego klawisza z INI (domyślnie '/')
@@ -382,45 +827,6 @@ namespace GOTHIC_ENGINE {
           if (currentTime - legendLastInputTime > 300) {
               showLegend = !showLegend;
               legendLastInputTime = currentTime;
-          }
-      }
-  }
-
-  // Wyświetla koordynaty gracza na ekranie (debug)
-  void DrawCoordinates() {
-      if (!showCoordinates || !player || !screen) return;
-
-      zVEC3 pos = player->GetPositionWorld();
-
-      // Wyświetl koordynaty w lewym górnym rogu
-      zSTRING coordText = "Pozycja gracza:";
-      zSTRING xText = "X: "; xText += Z (int)pos[0];
-      zSTRING yText = "Y: "; yText += Z (int)pos[1];
-      zSTRING zText = "Z: "; zText += Z (int)pos[2];
-
-      screen->SetFont("FONT_OLD_20_WHITE_HI.TGA");
-      screen->SetFontColor(zCOLOR(255, 255, 0));
-      screen->Print(200, 400, coordText);
-      screen->SetFontColor(zCOLOR(255, 255, 255));
-      screen->Print(200, 650, xText);
-      screen->Print(200, 900, yText);
-      screen->Print(200, 1150, zText);
-
-      // Instrukcja
-      screen->SetFontColor(zCOLOR(150, 150, 150));
-      screen->Print(200, 1500, "Klawisz P = wylacz");
-      screen->Print(200, 1750, "Zapisz X i Z w rogach mapy!");
-  }
-
-  // Obsługa klawisza koordynatów
-  void HandleCoordsKey() {
-      DWORD currentTime = GetTickCount();
-
-      // Klawisz P - toggle koordynatów (debug)
-      if (GetAsyncKeyState('P') & 0x8000) {
-          if (currentTime - coordsLastInputTime > 300) {
-              showCoordinates = !showCoordinates;
-              coordsLastInputTime = currentTime;
           }
       }
   }
@@ -588,6 +994,7 @@ namespace GOTHIC_ENGINE {
   // Obsługa klawiszy dla menu nawigacji (Windows API)
   void HandleNavKeys() {
       if (!screen || !player) return;
+      if (IsKeyBindCooldownActive()) return;  // Cooldown po bindowaniu
 
       DWORD currentTime = GetTickCount();
 
@@ -813,6 +1220,8 @@ namespace GOTHIC_ENGINE {
 
   void DrawDot(zCView* view, int x, int y, zCOLOR color) {
       if (x < 0 || x > 8192 || y < 0 || y > 8192) return;
+      // Dla okrągłej minimapy - sprawdź czy punkt jest w kole
+      if (opt_CircularMap && !IsInCircularBounds(x, y, 4096, 4096, 4000)) return;
       view->SetFontColor(color);
       view->Print(x, y, ".");
   }
@@ -875,50 +1284,117 @@ namespace GOTHIC_ENGINE {
       }
   }
 
+  // Rysuje okrągłą ramkę minimapy (gruba ramka z wielu okręgów)
+  void DrawCircularBorder() {
+      if (!screen || !opt_CircularMap) return;
+
+      // Środek minimapy w koordynatach ekranu
+      int centerX = MAP_X + MAP_SIZE / 2;
+      int centerY = MAP_Y + MAP_SIZE / 2;
+      int baseRadius = MAP_SIZE / 2;
+
+      screen->SetFont("FONT_OLD_10_WHITE.TGA");
+
+      // Rysuj zewnętrzną ramkę - grubą (kilka okręgów obok siebie)
+      const int numPoints = 90;  // Więcej punktów = gładszy okrąg
+
+      // Zewnętrzna ramka - biała, gruba (3 warstwy)
+      for (int layer = 0; layer < 3; layer++) {
+          int radius = baseRadius - 5 - layer * 8;
+
+          // Kolor: zewnętrzna warstwa jaśniejsza
+          if (layer == 0) {
+              screen->SetFontColor(zCOLOR(200, 200, 200));  // Jasny szary
+          } else if (layer == 1) {
+              screen->SetFontColor(zCOLOR(150, 150, 150));  // Średni szary
+          } else {
+              screen->SetFontColor(zCOLOR(100, 100, 100));  // Ciemny szary
+          }
+
+          for (int i = 0; i < numPoints; i++) {
+              float angle = (float)i / numPoints * 2.0f * (float)M_PI;
+              int px = centerX + (int)(radius * cos(angle));
+              int py = centerY + (int)(radius * sin(angle));
+              screen->Print(px - 10, py - 20, ".");
+          }
+      }
+
+      // Wewnętrzna linia - cienka, ciemniejsza
+      screen->SetFontColor(zCOLOR(60, 60, 60));
+      int innerRadius = baseRadius - 35;
+      for (int i = 0; i < numPoints; i++) {
+          float angle = (float)i / numPoints * 2.0f * (float)M_PI;
+          int px = centerX + (int)(innerRadius * cos(angle));
+          int py = centerY + (int)(innerRadius * sin(angle));
+          screen->Print(px - 10, py - 20, ".");
+      }
+  }
+
   void DrawMinimap() {
+      static int lastCircularMode = -1;   // Śledzenie zmiany trybu kształtu
+      static int lastTextureMode = -1;    // Śledzenie zmiany trybu tekstury
+
+      // Sprawdź czy zmienił się tryb (kwadratowy/okrągły lub tekstura)
+      if ((lastCircularMode != opt_CircularMap || lastTextureMode != opt_ShowMapTexture) && pMinimap) {
+          // Usuń wszystkie widoki i utwórz je od nowa
+          screen->RemoveItem(pMinimap); delete pMinimap; pMinimap = nullptr;
+          if (pBorderTop) { screen->RemoveItem(pBorderTop); delete pBorderTop; pBorderTop = nullptr; }
+          if (pBorderBottom) { screen->RemoveItem(pBorderBottom); delete pBorderBottom; pBorderBottom = nullptr; }
+          if (pBorderLeft) { screen->RemoveItem(pBorderLeft); delete pBorderLeft; pBorderLeft = nullptr; }
+          if (pBorderRight) { screen->RemoveItem(pBorderRight); delete pBorderRight; pBorderRight = nullptr; }
+          if (pPlayerArrow) { screen->RemoveItem(pPlayerArrow); delete pPlayerArrow; pPlayerArrow = nullptr; }
+      }
+      lastCircularMode = opt_CircularMap;
+      lastTextureMode = opt_ShowMapTexture;
+
       // Setup Views with textures to ensure visibility
       if (!pMinimap) {
           pMinimap = new zCView(MAP_X, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + MAP_SIZE);
 
-          // Kamienna tekstura tła minimapy
-          pMinimap->InsertBack("DIA_HIGHL.TGA");
-
-          pMinimap->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
-          pMinimap->SetTransparency(150);
+          // Tło zależy od trybu mapy
+          if (opt_CircularMap) {
+              // Okrągła mapa - całkowicie przezroczyste tło
+              pMinimap->InsertBack("DEFAULT.TGA");
+              pMinimap->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
+              pMinimap->SetTransparency(0);  // W pełni przezroczyste
+          } else {
+              // Kwadratowa - tekstura TIERUMENU.TGA
+              pMinimap->InsertBack("TIERUMENU.TGA");
+              pMinimap->SetAlphaBlendFunc(zRND_ALPHA_FUNC_BLEND);
+              pMinimap->SetTransparency(180);
+          }
           screen->InsertItem(pMinimap);
 
-          // Ramki dekoracyjne
-          int bThick = 25;
+          // Ramki dekoracyjne - tylko dla trybu kwadratowego
+          if (!opt_CircularMap) {
+              int bThick = 25;
 
-          pBorderTop = new zCView(MAP_X, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + bThick);
-          pBorderTop->InsertBack("Default.tga"); pBorderTop->SetColor(zCOLOR(255, 255, 255, 255));
-          screen->InsertItem(pBorderTop);
+              pBorderTop = new zCView(MAP_X, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + bThick);
+              pBorderTop->InsertBack("Default.tga"); pBorderTop->SetColor(zCOLOR(255, 255, 255, 255));
+              screen->InsertItem(pBorderTop);
 
-          pBorderBottom = new zCView(MAP_X, MAP_Y + MAP_SIZE - bThick, MAP_X + MAP_SIZE, MAP_Y + MAP_SIZE);
-          pBorderBottom->InsertBack("Default.tga"); pBorderBottom->SetColor(zCOLOR(255, 255, 255, 255));
-          screen->InsertItem(pBorderBottom);
+              pBorderBottom = new zCView(MAP_X, MAP_Y + MAP_SIZE - bThick, MAP_X + MAP_SIZE, MAP_Y + MAP_SIZE);
+              pBorderBottom->InsertBack("Default.tga"); pBorderBottom->SetColor(zCOLOR(255, 255, 255, 255));
+              screen->InsertItem(pBorderBottom);
 
-          pBorderLeft = new zCView(MAP_X, MAP_Y, MAP_X + bThick, MAP_Y + MAP_SIZE);
-          pBorderLeft->InsertBack("Default.tga"); pBorderLeft->SetColor(zCOLOR(255, 255, 255, 255));
-          screen->InsertItem(pBorderLeft);
+              pBorderLeft = new zCView(MAP_X, MAP_Y, MAP_X + bThick, MAP_Y + MAP_SIZE);
+              pBorderLeft->InsertBack("Default.tga"); pBorderLeft->SetColor(zCOLOR(255, 255, 255, 255));
+              screen->InsertItem(pBorderLeft);
 
-          pBorderRight = new zCView(MAP_X + MAP_SIZE - bThick, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + MAP_SIZE);
-          pBorderRight->InsertBack("Default.tga"); pBorderRight->SetColor(zCOLOR(255, 255, 255, 255));
-          screen->InsertItem(pBorderRight);
+              pBorderRight = new zCView(MAP_X + MAP_SIZE - bThick, MAP_Y, MAP_X + MAP_SIZE, MAP_Y + MAP_SIZE);
+              pBorderRight->InsertBack("Default.tga"); pBorderRight->SetColor(zCOLOR(255, 255, 255, 255));
+              screen->InsertItem(pBorderRight);
+          }
       }
 
       // Cleanup if disabled
       if (!opt_ShowMinimap) {
-          if (pMinimap) {
-             screen->RemoveItem(pMinimap); delete pMinimap; pMinimap = nullptr;
-             screen->RemoveItem(pBorderTop); delete pBorderTop; pBorderTop = nullptr;
-             screen->RemoveItem(pBorderBottom); delete pBorderBottom; pBorderBottom = nullptr;
-             screen->RemoveItem(pBorderLeft); delete pBorderLeft; pBorderLeft = nullptr;
-             screen->RemoveItem(pBorderRight); delete pBorderRight; pBorderRight = nullptr;
-          }
-          if (pPlayerArrow) {
-             screen->RemoveItem(pPlayerArrow); delete pPlayerArrow; pPlayerArrow = nullptr;
-          }
+          if (pMinimap) { screen->RemoveItem(pMinimap); delete pMinimap; pMinimap = nullptr; }
+          if (pBorderTop) { screen->RemoveItem(pBorderTop); delete pBorderTop; pBorderTop = nullptr; }
+          if (pBorderBottom) { screen->RemoveItem(pBorderBottom); delete pBorderBottom; pBorderBottom = nullptr; }
+          if (pBorderLeft) { screen->RemoveItem(pBorderLeft); delete pBorderLeft; pBorderLeft = nullptr; }
+          if (pBorderRight) { screen->RemoveItem(pBorderRight); delete pBorderRight; pBorderRight = nullptr; }
+          if (pPlayerArrow) { screen->RemoveItem(pPlayerArrow); delete pPlayerArrow; pPlayerArrow = nullptr; }
           return;
       }
 
@@ -1115,6 +1591,9 @@ namespace GOTHIC_ENGINE {
 
           // Rysuj kompas na obramowaniu
           DrawCompass(mapRotation);
+
+          // Rysuj okrągłą ramkę jeśli włączony tryb okrągły
+          DrawCircularBorder();
       }
 
       // Strzałka gracza z tekstury O.TGA - na wierzchu wszystkich elementów
@@ -1142,25 +1621,59 @@ namespace GOTHIC_ENGINE {
       if (!ogame || !player || !screen) return;
 
       LoadOptions();
-      HandleZoomKeys();   // Obsługa klawiszy zoom: ; (oddal) i ' (przybliż)
-      HandleNavKeys();    // Obsługa klawiszy nawigacji: ] (otwórz menu)
-      HandleLegendKey();  // Obsługa klawisza legendy: /
-      HandleCoordsKey();  // Obsługa klawisza koordynatów: \ (debug)
 
-      DrawMinimap();
-      DrawNavMenu();      // Rysowanie menu wyboru NPC (jeśli otwarte)
-      DrawLegend();       // Rysowanie legendy (jeśli włączona)
-      DrawCoordinates();  // Wyświetlanie koordynatów (debug)
+      // Zawsze rysuj minimapę (niezależnie od key binding)
+      HandleZoomKeys();      // Obsługa klawiszy zoom
+      HandleLegendKey();     // Obsługa klawisza legendy
+      DrawMinimap();         // Rysuje minimapę (radar)
+      DrawLegend();          // Rysowanie legendy
+
+      // Key binding overlay na wierzchu (jeśli aktywny)
+      CheckKeyBindTrigger();
+      if (keyBindMode != 0) {
+          HandleKeyBindMode();
+          DrawKeyBindOverlay();
+      } else {
+          // Nawigacja NPC tylko gdy nie bindujemy
+          HandleNavKeys();
+          DrawNavMenu();
+      }
   }
 
   TSaveLoadGameInfo& SaveLoadGameInfo = UnionCore::SaveLoadGameInfo;
 
   void Game_Entry() {}
-  void Game_Init() { LoadOptions(); }
+
+  void Game_Init() {
+      // Wyczyść triggery key binding przy starcie gry (na wszelki wypadek)
+      if (zoptions) {
+          zSTRING iniPath = GetGameIniPath();
+          // Resetuj w pliku INI
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindZoomIn", "0", iniPath.ToChar());
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindZoomOut", "0", iniPath.ToChar());
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindLegend", "0", iniPath.ToChar());
+          WritePrivateProfileStringA("QUESTHELPER_V2", "KeyBindNpcSearch", "0", iniPath.ToChar());
+          // Resetuj też w zoptions (cache) - CheckKeyBindTrigger czyta stąd!
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindZoomIn", 0, TRUE);
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindZoomOut", 0, TRUE);
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindLegend", 0, TRUE);
+          zoptions->WriteInt("QUESTHELPER_V2", "KeyBindNpcSearch", 0, TRUE);
+      }
+      LoadOptions();
+  }
   void Game_Exit() {}
   void Game_PreLoop() {}
   void Game_PostLoop() {}
-  void Game_MenuLoop() {}
+  void Game_MenuLoop() {
+      if (!screen) return;
+
+      CheckKeyBindTrigger(); // Sprawdź czy menu aktywowało key binding
+
+      if (keyBindMode != 0) {
+          HandleKeyBindMode();
+          DrawKeyBindOverlay();
+      }
+  }
   void Game_SaveBegin() {}
   void Game_SaveEnd() {}
   void LoadBegin() {}
