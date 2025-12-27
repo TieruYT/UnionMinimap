@@ -22,9 +22,9 @@
 |:---:|:---:|:---:|
 | ![Minimap Settings](screenshot.png) | ![NPC Navigation Menu](screenshot2.png) | ![Navigation Line](screenshot3.png) |
 
-| Skróty klawiszowe | Legenda kolorów | Podgląd VDF |
-|:---:|:---:|:---:|
-| ![Keybindings](skroty.png) | ![Color Legend](legenda.png) | ![VDF Preview](vdf_preview.png) |
+| Skróty klawiszowe | Legenda kolorów |
+|:---:|:---:|
+| ![Keybindings](skroty.png) | ![Color Legend](legenda.png) |
 
 ## 🌟 Funkcje / Features
 
