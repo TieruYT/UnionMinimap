@@ -19,19 +19,19 @@ const int Choice_SY = 350;
 const int Choice_DY = 120;
 
 // ================================================================================================
-// POZIOM 1: G≈Å√ìWNY WPIS "TIERU PLUGINS" W MENU UNION
+// POZIOM 1: G£”WNY WPIS "TIERU PLUGINS" W MENU UNION
 // ================================================================================================
 
 instance MenuItem_Union_Auto_Tieru(C_MENU_ITEM_UNION_DEF)
 {
   text[0]          = "Tieru Plugins";
-  text[1]          = "Zestaw modow Tieru";
+  text[1]          = "Zestaw modÛw Tieru";
   onselaction[0]   = SEL_ACTION_STARTMENU;
   onselaction_s[0] = "QuestHelper:Menu_Tieru_Main";
 };
 
 // ================================================================================================
-// POZIOM 2: LISTA MOD√ìW (np. MINIMAP)
+// POZIOM 2: LISTA MOD”W (np. MINIMAP)
 // ================================================================================================
 
 instance Menu_Tieru_Main(C_MENU_DEF)
@@ -43,7 +43,7 @@ instance Menu_Tieru_Main(C_MENU_DEF)
   Menu_SearchItems("QuestHelper:MENUITEM_TIERU_LIST_*");
 };
 
-// Nag≈Ç√≥wek
+// Nag≥Ûwek
 instance MenuItem_Tieru_List_Headline(C_MENU_ITEM_DEF)
 {
   type    = MENU_ITEM_TEXT;
@@ -70,7 +70,7 @@ instance MenuItem_Tieru_List_Minimap(C_MENU_ITEM_DEF)
   text[1]        = "Konfiguracja minimapy";
 };
 
-// Wpis "Skr√≥ty klawiszowe"
+// Wpis "SkrÛty klawiszowe"
 instance MenuItem_Tieru_List_Keybinds(C_MENU_ITEM_DEF)
 {
   backpic        = "";
@@ -81,8 +81,8 @@ instance MenuItem_Tieru_List_Keybinds(C_MENU_ITEM_DEF)
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_STARTMENU;
   onselaction_s[0] = "QuestHelper:Menu_Keybinds_Settings";
-  text[0]        = "Skroty klawiszowe";
-  text[1]        = "Konfiguracja skrotow klawiszowych";
+  text[0]        = "SkrÛty klawiszowe";
+  text[1]        = "Konfiguracja skrÛtow klawiszowych";
 };
 
 // ================================================================================================
@@ -120,8 +120,8 @@ instance MenuItem_MM_OPT_ShowMinimap(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Minimape";
-  text[1]        = "Wlacz lub wylacz minimape";
+  text[0]        = "Pokaø Minimape";
+  text[1]        = "W≥πcz lub wy≥πcz minimapÍ";
 };
 
 instance MenuItem_MM_OPT_ShowMinimap_Choice(C_MENU_ITEM_DEF)
@@ -138,7 +138,7 @@ instance MenuItem_MM_OPT_ShowMinimap_Choice(C_MENU_ITEM_DEF)
   
   onchgsetoption        = "ShowMinimap";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show Chests ---
@@ -151,8 +151,8 @@ instance MenuItem_MM_OPT_ShowChests(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Skrzynie";
-  text[1]        = "Pokazuj kropki skrzyn na mapie";
+  text[0]        = "Pokaø Skrzynie";
+  text[1]        = "Pokazuj kropki skrzyÒ na mapie";
 };
 
 instance MenuItem_MM_OPT_ShowChests_Choice(C_MENU_ITEM_DEF)
@@ -169,7 +169,7 @@ instance MenuItem_MM_OPT_ShowChests_Choice(C_MENU_ITEM_DEF)
   
   onchgsetoption        = "ShowChests";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Hide Locked Chests ---
@@ -182,8 +182,8 @@ instance MenuItem_MM_OPT_HideLocked(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Ukryj zamkniete na klucz";
-  text[1]        = "Ukrywa skrzynie wymagajace klucza";
+  text[0]        = "Ukryj zamkniÍte na klucz";
+  text[1]        = "Ukrywa skrzynie wymagajπce klucza";
 };
 
 instance MenuItem_MM_OPT_HideLocked_Choice(C_MENU_ITEM_DEF)
@@ -200,7 +200,7 @@ instance MenuItem_MM_OPT_HideLocked_Choice(C_MENU_ITEM_DEF)
   
   onchgsetoption        = "HideLockedChests";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- All NPC White ---
@@ -213,8 +213,8 @@ instance MenuItem_MM_OPT_AllWhite(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Wszyscy NPC na bialo";
-  text[1]        = "Wylacz kolory wrogow i questow";
+  text[0]        = "Wszyscy NPC na bia≥o";
+  text[1]        = "Wy≥πcz kolory wrogÛw i questÛw";
 };
 
 instance MenuItem_MM_OPT_AllWhite_Choice(C_MENU_ITEM_DEF)
@@ -231,7 +231,7 @@ instance MenuItem_MM_OPT_AllWhite_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "AllNpcWhite";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show Items ---
@@ -244,8 +244,8 @@ instance MenuItem_MM_OPT_ShowItems(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Przedmioty";
-  text[1]        = "Wyswietla przedmioty na minimapie (niebieski)";
+  text[0]        = "Pokaø Przedmioty";
+  text[1]        = "Wyúwietla przedmioty na minimapie (niebieski)";
 };
 
 instance MenuItem_MM_OPT_ShowItems_Choice(C_MENU_ITEM_DEF)
@@ -262,7 +262,7 @@ instance MenuItem_MM_OPT_ShowItems_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowItems";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show Plants ---
@@ -275,8 +275,8 @@ instance MenuItem_MM_OPT_ShowPlants(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Rosliny";
-  text[1]        = "Wyswietla rosliny i ziola na minimapie (zielony)";
+  text[0]        = "Pokaø Roúliny";
+  text[1]        = "Wyúwietla roúliny i zio≥a na minimapie (zielony)";
 };
 
 instance MenuItem_MM_OPT_ShowPlants_Choice(C_MENU_ITEM_DEF)
@@ -293,7 +293,7 @@ instance MenuItem_MM_OPT_ShowPlants_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowPlants";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show Enemies ---
@@ -306,8 +306,8 @@ instance MenuItem_MM_OPT_ShowEnemies(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Wrogow";
-  text[1]        = "Wyswietla wrogow na minimapie (czerwony)";
+  text[0]        = "Pokaø WrogÛw";
+  text[1]        = "Wyúwietla wrogow na minimapie (czerwony)";
 };
 
 instance MenuItem_MM_OPT_ShowEnemies_Choice(C_MENU_ITEM_DEF)
@@ -324,7 +324,7 @@ instance MenuItem_MM_OPT_ShowEnemies_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowEnemies";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show NPC Names ---
@@ -337,8 +337,8 @@ instance MenuItem_MM_OPT_ShowNpcNames(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Nazwy NPC";
-  text[1]        = "Wyswietla nazwy NPC nad kropkami";
+  text[0]        = "Pokaø Nazwy NPC";
+  text[1]        = "Wyúwietla nazwy NPC nad kropkami";
 };
 
 instance MenuItem_MM_OPT_ShowNpcNames_Choice(C_MENU_ITEM_DEF)
@@ -355,7 +355,7 @@ instance MenuItem_MM_OPT_ShowNpcNames_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowNpcNames";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show Item Names ---
@@ -368,8 +368,8 @@ instance MenuItem_MM_OPT_ShowItemNames(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Nazwy Przedmiotow";
-  text[1]        = "Wyswietla nazwy przedmiotow (bez roslin)";
+  text[0]        = "Pokaø Nazwy PrzedmiotÛw";
+  text[1]        = "Wyúwietla nazwy przedmiotÛw (bez roúlin)";
 };
 
 instance MenuItem_MM_OPT_ShowItemNames_Choice(C_MENU_ITEM_DEF)
@@ -386,7 +386,7 @@ instance MenuItem_MM_OPT_ShowItemNames_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowItemNames";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Show Plant Names ---
@@ -399,8 +399,8 @@ instance MenuItem_MM_OPT_ShowPlantNames(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Nazwy Roslin";
-  text[1]        = "Wyswietla nazwy roslin i ziol";
+  text[0]        = "Pokaø Nazwy Roúlin";
+  text[1]        = "Wyúwietla nazwy roúlin i ziÛ≥";
 };
 
 instance MenuItem_MM_OPT_ShowPlantNames_Choice(C_MENU_ITEM_DEF)
@@ -417,7 +417,7 @@ instance MenuItem_MM_OPT_ShowPlantNames_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowPlantNames";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Rotate Map ---
@@ -431,7 +431,7 @@ instance MenuItem_MM_OPT_RotateMap(C_MENU_ITEM_DEF)
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
   text[0]        = "Obracanie Mapy";
-  text[1]        = "Mapa obraca sie zgodnie z kierunkiem gracza";
+  text[1]        = "Mapa obraca siÍ zgodnie z kierunkiem gracza";
 };
 
 instance MenuItem_MM_OPT_RotateMap_Choice(C_MENU_ITEM_DEF)
@@ -448,7 +448,7 @@ instance MenuItem_MM_OPT_RotateMap_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "RotateMap";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- NPC Name Range ---
@@ -461,8 +461,8 @@ instance MenuItem_MM_OPT_NpcNameRange(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Zasieg Nazw NPC";
-  text[1]        = "Maksymalna odleglosc wyswietlania nazw NPC";
+  text[0]        = "ZasiÍg Nazw NPC";
+  text[1]        = "Maksymalna odlegloúÊ wyúwietlania nazw NPC";
 };
 
 instance MenuItem_MM_OPT_NpcNameRange_Choice(C_MENU_ITEM_DEF)
@@ -493,7 +493,7 @@ instance MenuItem_MM_OPT_MapZoom(C_MENU_ITEM_DEF)
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
   text[0]        = "Zoom Mapy";
-  text[1]        = "Przyblizenie mapy (klawisze ; i ')";
+  text[1]        = "Przybliøenie mapy (klawisze ; i ')";
 };
 
 instance MenuItem_MM_OPT_MapZoom_Choice(C_MENU_ITEM_DEF)
@@ -523,8 +523,8 @@ instance MenuItem_MM_OPT_ShowCompass(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Pokaz Kompas";
-  text[1]        = "Wyswietla kierunki swiata (N/E/S/W) na ramce";
+  text[0]        = "Pokaø Kompas";
+  text[1]        = "Wyúwietla kierunki úwiata (N/E/S/W) na ramce";
 };
 
 instance MenuItem_MM_OPT_ShowCompass_Choice(C_MENU_ITEM_DEF)
@@ -541,7 +541,7 @@ instance MenuItem_MM_OPT_ShowCompass_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "ShowCompass";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // --- Use World Map ---
@@ -554,8 +554,8 @@ instance MenuItem_MM_OPT_UseWorldMap(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Tekstura Mapy Swiata";
-  text[1]        = "Wyswietla teksture mapy zamiast kamiennego tla";
+  text[0]        = "Tekstura Mapy åwiata";
+  text[1]        = "Wyúwietla teksturÍ mapy zamiast kamiennego t≥a";
 };
 
 instance MenuItem_MM_OPT_UseWorldMap_Choice(C_MENU_ITEM_DEF)
@@ -572,11 +572,11 @@ instance MenuItem_MM_OPT_UseWorldMap_Choice(C_MENU_ITEM_DEF)
 
   onchgsetoption        = "UseWorldMap";
   onchgsetoptionsection = "QUESTHELPER_V2";
-  text[0]               = "Wyl|Wl";
+  text[0]               = "Wy≥|W≥";
 };
 
 // ================================================================================================
-// POZIOM 3: SKR√ìTY KLAWISZOWE
+// POZIOM 3: SKR”TY KLAWISZOWE
 // ================================================================================================
 
 instance Menu_Keybinds_Settings(C_MENU_DEF)
@@ -597,7 +597,7 @@ instance MenuItem_KB_OPT_Headline(C_MENU_ITEM_DEF)
   dimx    = 8100;
   flags   = flags & ~IT_SELECTABLE;
   flags   = flags | IT_TXT_CENTER;
-  text[0] = "SKROTY KLAWISZOWE";
+  text[0] = "SKR”TY KLAWISZOWE";
 };
 
 // --- Key Zoom In ---
@@ -610,8 +610,8 @@ instance MenuItem_KB_OPT_ZoomIn(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Przybliz mape";
-  text[1]        = "Klawisz do przyblizania minimapy";
+  text[0]        = "Przybliø mapÍ";
+  text[1]        = "Klawisz do przybliøania minimapy";
 };
 
 instance MenuItem_KB_OPT_ZoomIn_Choice(C_MENU_ITEM_DEF)
@@ -641,7 +641,7 @@ instance MenuItem_KB_OPT_ZoomOut(C_MENU_ITEM_DEF)
   dimy           = Text_SY;
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
-  text[0]        = "Oddal mape";
+  text[0]        = "Oddal mapÍ";
   text[1]        = "Klawisz do oddalania minimapy";
 };
 
@@ -673,7 +673,7 @@ instance MenuItem_KB_OPT_Legend(C_MENU_ITEM_DEF)
   flags          = flags | IT_EFFECTS_NEXT;
   onselaction[0] = SEL_ACTION_UNDEF;
   text[0]        = "Legenda";
-  text[1]        = "Klawisz do wlaczania legendy";
+  text[1]        = "Klawisz do W≥πczania legendy";
 };
 
 instance MenuItem_KB_OPT_Legend_Choice(C_MENU_ITEM_DEF)
