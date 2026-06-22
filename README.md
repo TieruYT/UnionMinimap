@@ -1,6 +1,6 @@
 # Gothic 1 & 2 Union Plugin: Tieru Minimap
 
-![Gothic](https://img.shields.io/badge/Game-Gothic%201%20%26%202-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.2-orange)
+![Gothic](https://img.shields.io/badge/Game-Gothic%201%20%26%202-blue) ![Union](https://img.shields.io/badge/Platform-Union%201.0m%2B-green) ![Version](https://img.shields.io/badge/Version-3.2.1-orange)
 
 ## 📖 Opis / Description
 
@@ -157,6 +157,11 @@ MapZoom=3
 
 ## 📝 Historia zmian / Changelog
 
+### v3.2.1 (2026-06-22)
+- 🔤 **Polskie znaki w menu** - Dodano polskie znaki diakrytyczne (ą, ć, ę, ł, ó, ż...) w menu wtyczki: „Pokaż Minimapę", „Włącz/Wyłącz", „Wszyscy NPC na biało", „Skróty klawiszowe"
+- 🔧 Skrypt menu przekodowany na Windows-1250 (ANSI), aby Gothic poprawnie renderował polskie litery podczas wstrzykiwania kodu
+- 🙏 Podziękowania dla [@Damianut](https://github.com/Damianut) za poprawkę (PR [#1](https://github.com/TieruYT/UnionMinimap/pull/1))
+
 ### v3.2 (2025-12-27)
 - ✨ **System bindowania klawiszy** - Przypisz dowolny klawisz do funkcji
 - ✨ **Nowa tekstura mapy** - Ładniejsza kamienna tekstura dla kwadratowej mapy
@@ -197,6 +202,56 @@ MapZoom=3
 - ✨ Podstawowa minimapa
 - ✨ Wyświetlanie NPC i skrzyń
 - ✨ 4 opcje konfiguracyjne
+
+---
+
+## 📝 Changelog (English)
+
+### v3.2.1 (2026-06-22)
+- 🔤 **Polish characters in menu** - Added Polish diacritical characters (ą, ć, ę, ł, ó, ż...) to the plugin menu: "Pokaż Minimapę", "Włącz/Wyłącz", "Wszyscy NPC na biało", "Skróty klawiszowe"
+- 🔧 Menu script re-encoded to Windows-1250 (ANSI) so Gothic renders Polish letters correctly during code injection
+- 🙏 Thanks to [@Damianut](https://github.com/Damianut) for the fix (PR [#1](https://github.com/TieruYT/UnionMinimap/pull/1))
+
+### v3.2 (2025-12-27)
+- ✨ **Key binding system** - Assign any key to a function
+- ✨ **New map texture** - Nicer stone texture for the square map
+- ✨ **Circular map** - Option to change the map shape to circular (compass)
+- ✨ **Closer zoom** - Added 500 and 1000 values for greater magnification
+- ✨ **Key legend** - All binds described in the legend (default `/`)
+- 🔧 Default NPC search key changed to `P`
+- 🔧 Fixed saving of binds between game sessions
+
+### v3.1 (2025-12-25)
+- ✨ **Gothic 1 support** - One DLL for G1, G1A, G2, G2A!
+- ✨ **Configurable keyboard shortcuts** - Menu to change keys
+- ✨ **N/E/S/W compass** - Cardinal directions on the minimap frame
+- ✨ **Color legend** - Display with the `/` key
+- ✨ **20 keys to choose from** - F1-F6, NUM+/-/*, PGUP/PGDN and more
+- 🔧 Option to disable the compass in the menu
+
+### v3.0 (2025-12-23)
+- ✨ **NPC navigation** - NPC selection menu with search (key `\`)
+- ✨ **Navigation line** - Golden line leading to the selected NPC/enemy
+- ✨ **Auto arrival** - The line disappears when you reach the target
+- ✨ **NPC filtering** - Real-time search by name
+- ✨ **Distance display** - Distance to target in meters
+- 🔧 Game controls locked while using the navigation menu
+
+### v2.0 (2025-12-22)
+- ✨ Map rotation according to character direction
+- ✨ Map zoom with keys (`;'` or `,.`)
+- ✨ Display of items and plants on the map
+- ✨ Display of NPC, item, and plant names
+- ✨ Configurable NPC name ranges
+- ✨ Player arrow as a texture (O.TGA)
+- ✨ Enemies always red (even with "All NPCs white")
+- ✨ 13 configuration options in the menu
+- 🔧 Rendering optimization
+
+### v1.0 (2025-12-12)
+- ✨ Basic minimap
+- ✨ Display of NPCs and chests
+- ✨ 4 configuration options
 
 ## 🤝 Wkład / Contributing
 
