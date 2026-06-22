@@ -26,6 +26,10 @@
 |:---:|:---:|
 | ![Keybindings](skroty.png) | ![Color Legend](legenda.png) |
 
+| Polskie znaki w menu / Polish characters in menu (v3.2.1) |
+|:---:|
+| ![Polish Menu](screenshot_pl_menu.png) |
+
 ## 🌟 Funkcje / Features
 
 ### Minimapa / Minimap
